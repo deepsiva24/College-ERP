@@ -10,7 +10,7 @@ steps:
 
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'school-erp-backend', '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/backend:latest', '--region', 'us-central1']
+  args: ['run', 'deploy', 'school-erp-backend', '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/backend:latest', '--region', 'us-central1', '--port', '8000']
   id: 'Deploy Backend'
 
 # Frontend Build, Push, Deploy
@@ -24,7 +24,7 @@ steps:
 
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'school-erp-frontend', '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/frontend:latest', '--region', 'us-central1']
+  args: ['run', 'deploy', 'school-erp-frontend', '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/frontend:latest', '--region', 'us-central1', '--port', '80']
   id: 'Deploy Frontend'
 
 options:
