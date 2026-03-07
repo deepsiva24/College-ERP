@@ -1,0 +1,2 @@
+﻿src/App.tsx(7,49): error TS2503: Cannot find namespace 'JSX'.
+src/store/useAuthStore.ts(2,10): error TS1484: 'User' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
