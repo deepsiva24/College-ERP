@@ -88,3 +88,7 @@ To add a new client or initialize their database:
    ```
 
 This script safely generates the separated PostgreSQL schema (e.g., `tenant_prahithaedu`), creates all required tables inside it, and populates the first Admin User using the configured password.
+
+
+gcloud run services update school-erp-backend --region=us-central1 \
+  --update-env-vars DEFAULT_CLIENT_ID="New Institution Name"

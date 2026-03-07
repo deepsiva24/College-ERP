@@ -1,5 +1,5 @@
 steps:
-# Backend Build, Push, Deploy
+# ── Backend: Build, Push, Deploy ──────────────────────────
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/backend:latest', './backend']
   id: 'Build Backend'
@@ -13,9 +13,27 @@ steps:
   args: ['run', 'deploy', 'school-erp-backend', '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/backend:latest', '--region', 'us-central1', '--port', '8000']
   id: 'Deploy Backend'
 
-# Frontend Build, Push, Deploy
+# ── Get Backend URL ───────────────────────────────────────
+# Fetch the deployed backend URL so the frontend can be built with it
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: bash
+  args:
+    - '-c'
+    - |
+      BACKEND_URL=$(gcloud run services describe school-erp-backend --region=us-central1 --format='value(status.url)')
+      echo "$$BACKEND_URL" > /workspace/backend_url.txt
+      echo "Backend URL: $$BACKEND_URL"
+  id: 'Get Backend URL'
+
+# ── Frontend: Build, Push, Deploy ─────────────────────────
+# Build the frontend with the real backend URL injected via --build-arg
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/frontend:latest', './frontend']
+  entrypoint: bash
+  args:
+    - '-c'
+    - |
+      BACKEND_URL=$(cat /workspace/backend_url.txt)
+      docker build --build-arg VITE_API_URL=$$BACKEND_URL -t us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/frontend:latest ./frontend
   id: 'Build Frontend'
 
 - name: 'gcr.io/cloud-builders/docker'
