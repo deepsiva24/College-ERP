@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
+from config import settings
 
 router = APIRouter(tags=["Attendance"])
 
@@ -100,7 +101,7 @@ def record_attendance(record: schemas.AttendanceRecordCreate):
 
 
 @router.post("/attendance/bulk-upload")
-def bulk_upload_attendance(file: UploadFile = File(...), client_id: str = Form("Prahitha Educational")):
+def bulk_upload_attendance(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
     """Bulk import attendance from a CSV file"""
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")

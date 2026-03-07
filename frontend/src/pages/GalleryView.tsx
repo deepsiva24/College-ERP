@@ -13,7 +13,7 @@ interface GalleryItem {
 
 export default function GalleryView() {
     const user = useAuthStore((state) => state.user);
-    const clientId = user?.client_id || 'Prahitha Educational';
+    const clientId = user?.client_id || 'Prahitha Edu';
     const [items, setItems] = useState<GalleryItem[]>([]);
     const [loading, setLoading] = useState(true);
 

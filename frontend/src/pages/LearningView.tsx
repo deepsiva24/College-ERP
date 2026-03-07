@@ -25,7 +25,7 @@ interface ClassCourseGroup {
 
 export default function LearningView() {
     const user = useAuthStore((state) => state.user);
-    const clientId = user?.client_id || 'Prahitha Educational';
+    const clientId = user?.client_id || 'Prahitha Edu';
     const [groupedCourses, setGroupedCourses] = useState<ClassCourseGroup[]>([]);
     const [expandedClass, setExpandedClass] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);

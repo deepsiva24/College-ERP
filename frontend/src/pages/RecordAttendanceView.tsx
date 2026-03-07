@@ -17,7 +17,7 @@ interface StudentBasic {
 
 export default function RecordAttendanceView() {
     const { user } = useAuthStore();
-    const clientId = user?.client_id || 'Prahitha Educational';
+    const clientId = user?.client_id || 'Prahitha Edu';
     const token = localStorage.getItem('token');
     const [activeTab, setActiveTab] = useState<'flashcard' | 'bulk'>('flashcard');
 

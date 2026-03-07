@@ -69,3 +69,22 @@ The repository is organized into two main workspaces:
 ## Contributing
 
 When contributing to this project, ensure that the decoupling between the frontend and backend is maintained and that any new API endpoints are well-documented to assist with the future Dart mobile app migration.
+
+## Client Database Initialization
+
+The multitenant architecture strictly requires clients (tenants) to be initialized before use. Automatic database schema creation is disabled for safety.
+
+To add a new client or initialize their database:
+1. Add the client's name and initial admin password to the `client_config.yaml` file in the root directory.
+2. Open a secure SSH tunnel to the production database (leave this running):
+   ```bash
+   gcloud compute ssh school-erp-db --project=rosy-hope-489506-p3 --zone=us-central1-a --tunnel-through-iap -- -L 5432:localhost:5432
+   ```
+3. Run the initialization script locally from the `backend` folder:
+   ```powershell
+   cd backend
+   $env:DATABASE_URL="postgresql://postgres:erp-secure-production-db-password-2026@localhost:5432/postgres"
+   venv\Scripts\python.exe init_clients.py
+   ```
+
+This script safely generates the separated PostgreSQL schema (e.g., `tenant_prahithaedu`), creates all required tables inside it, and populates the first Admin User using the configured password.

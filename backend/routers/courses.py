@@ -5,6 +5,7 @@ from io import StringIO
 from sqlalchemy.orm import Session
 import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
+from config import settings
 
 router = APIRouter(tags=["Courses"])
 
@@ -25,7 +26,7 @@ def create_course(course: schemas.CourseCreate, teacher_id: int):
 
 
 @router.post("/courses/bulk-upload")
-async def bulk_upload_courses(file: UploadFile = File(...), client_id: str = Form("Prahitha Educational")):
+async def bulk_upload_courses(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
     """Bulk import courses from a CSV file"""
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
@@ -118,7 +119,7 @@ def get_courses_grouped_by_class(db: Session = Depends(get_tenant_db)):
 
 
 @router.post("/courses/{course_id}/enroll", response_model=schemas.Enrollment)
-def enroll_in_course(course_id: int, student_id: int, client_id: str = "Prahitha Educational"):
+def enroll_in_course(course_id: int, student_id: int, client_id: str = settings.DEFAULT_CLIENT_ID):
     with get_tenant_db_ctx(client_id) as db:
         course = db.query(models.Course).filter(models.Course.id == course_id).first()
         if not course:

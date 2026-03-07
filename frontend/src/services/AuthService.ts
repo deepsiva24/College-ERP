@@ -7,7 +7,7 @@ interface LoginResponse extends User {
 }
 
 export class AuthService {
-    static async login(email: string, password: string, client_id: string = 'Prahitha Educational'): Promise<LoginResponse> {
+    static async login(email: string, password: string, client_id: string): Promise<LoginResponse> {
         try {
             const response = await apiClient.post<LoginResponse>('/auth/login', { email, password, client_id });
             return response.data;

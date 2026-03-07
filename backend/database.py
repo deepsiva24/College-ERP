@@ -2,6 +2,7 @@ import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from contextlib import contextmanager
+from config import settings
 
 Base = declarative_base()
 
@@ -19,24 +20,17 @@ def get_tenant_db_engine(client_id: str):
     schema_name = f"tenant_{client_id}".replace("-", "_").replace(" ", "_").lower()
     
     if client_id not in engines:
-        # Create schema if it doesn't exist
-        with engine.begin() as conn:
-            conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}"'))
-            
         # Create a tenant-specific engine by mapping the default (None) schema to the tenant schema
+        # Note: Client schemas and tables are strictly managed by init_clients.py
         tenant_engine = engine.execution_options(schema_translate_map={None: schema_name})
         engines[client_id] = sessionmaker(autocommit=False, autoflush=False, bind=tenant_engine)
         
-        # Ensure tables are created for this specific tenant schema lazily
-        import models
-        models.Base.metadata.create_all(bind=tenant_engine)
-        
     return engines[client_id]
 
-def get_tenant_db(client_id: str = "Prahitha Educational"):
+def get_tenant_db(client_id: str = settings.DEFAULT_CLIENT_ID):
     """
     Dependency to yield a DB session explicitly tied to a tenant.
-    We default to Prahitha Educational as requested by the user.
+    Default is read from DEFAULT_CLIENT_ID environment variable.
     """
     safe_client_id = "".join(c for c in client_id if c.isalnum() or c in ("_", "-")).lower()
     SessionLocal = get_tenant_db_engine(safe_client_id)
@@ -48,7 +42,7 @@ def get_tenant_db(client_id: str = "Prahitha Educational"):
         db.close()
 
 @contextmanager
-def get_tenant_db_ctx(client_id: str = "Prahitha Educational"):
+def get_tenant_db_ctx(client_id: str = settings.DEFAULT_CLIENT_ID):
     safe_client_id = "".join(c for c in client_id if c.isalnum() or c in ("_", "-")).lower()
     SessionLocal = get_tenant_db_engine(safe_client_id)
     

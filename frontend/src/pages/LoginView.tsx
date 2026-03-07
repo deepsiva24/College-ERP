@@ -1,17 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { AuthService } from '../services/AuthService';
+import { apiClient } from '../api/client';
 import { Mail, Lock, LogIn } from 'lucide-react';
 
 export default function LoginView() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [clientId, setClientId] = useState('Prahitha Educational');
+    const [clientId, setClientId] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const setAuth = useAuthStore((state) => state.setAuth);
+
+    useEffect(() => {
+        apiClient.get('/config').then(res => {
+            setClientId(res.data.default_client_id || '');
+        }).catch(() => { });
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

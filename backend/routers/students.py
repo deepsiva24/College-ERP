@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
 from auth import hash_password
+from config import settings
 
 router = APIRouter(tags=["Students"])
 
@@ -44,7 +45,7 @@ def create_student(student: schemas.StudentCreate):
 
 
 @router.post("/students/upload/")
-async def upload_students_csv(file: UploadFile = File(...), client_id: str = Form("Prahitha Educational")):
+async def upload_students_csv(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
     with get_tenant_db_ctx(client_id) as db:
         try:
             content = await file.read()

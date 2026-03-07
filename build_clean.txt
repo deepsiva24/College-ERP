@@ -1,0 +1,601 @@
+---------------- REMOTE BUILD OUTPUT ----------------
+starting build "cabc7db4-5e97-4ab9-8ba5-28b3d3fd282a"
+FETCHSOURCE
+From https://github.com/deepsiva24/College-ERP
+ * branch            dbd920aa1ad8bf4996b1f0657964f1aff167fd5d -> FETCH_HEAD
+HEAD is now at dbd920a ci: Add cloudbuild.yaml to deploy backend and frontend to Cloud Run
+GitCommit:
+dbd920aa1ad8bf4996b1f0657964f1aff167fd5d
+BUILD
+Starting Step #0 - "Build Backend"
+Step #0 - "Build Backend": Already have image (with digest): gcr.io/cloud-builders/docker
+Step #0 - "Build Backend": Sending build context to Docker daemon  131.6kB
+Step #0 - "Build Backend": Step 1/8 : FROM python:3.11-slim
+Step #0 - "Build Backend": 3.11-slim: Pulling from library/python
+Step #0 - "Build Backend": 206356c42440: Already exists
+Step #0 - "Build Backend": 206709444425: Pulling fs layer
+Step #0 - "Build Backend": bbf418262cbe: Pulling fs layer
+Step #0 - "Build Backend": 43272e9c9d4b: Pulling fs layer
+Step #0 - "Build Backend": 206709444425: Verifying Checksum
+Step #0 - "Build Backend": 206709444425: Download complete
+Step #0 - "Build Backend": 43272e9c9d4b: Verifying Checksum
+Step #0 - "Build Backend": 43272e9c9d4b: Download complete
+Step #0 - "Build Backend": bbf418262cbe: Verifying Checksum
+Step #0 - "Build Backend": bbf418262cbe: Download complete
+Step #0 - "Build Backend": 206709444425: Pull complete
+Step #0 - "Build Backend": bbf418262cbe: Pull complete
+Step #0 - "Build Backend": 43272e9c9d4b: Pull complete
+Step #0 - "Build Backend": Digest: sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47
+Step #0 - "Build Backend": Status: Downloaded newer image for python:3.11-slim
+Step #0 - "Build Backend":  ---> 7c68b5683872
+Step #0 - "Build Backend": Step 2/8 : WORKDIR /app
+Step #0 - "Build Backend":  ---> Running in 2dc3c45678e1
+Step #0 - "Build Backend": Removing intermediate container 2dc3c45678e1
+Step #0 - "Build Backend":  ---> 79fec7975efb
+Step #0 - "Build Backend": Step 3/8 : RUN apt-get update && apt-get install -y     gcc     libpq-dev     && rm -rf /var/lib/apt/lists/*
+Step #0 - "Build Backend":  ---> Running in 30ce5ffce1d8
+Step #0 - "Build Backend": Hit:1 http://deb.debian.org/debian trixie InRelease
+Step #0 - "Build Backend": Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+Step #0 - "Build Backend": Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+Step #0 - "Build Backend": Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9670 kB]
+Step #0 - "Build Backend": Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [5412 B]
+Step #0 - "Build Backend": Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [108 kB]
+Step #0 - "Build Backend": Fetched 9875 kB in 1s (7451 kB/s)
+Step #0 - "Build Backend": Reading package lists...
+Step #0 - "Build Backend": Reading package lists...
+Step #0 - "Build Backend": Building dependency tree...
+Step #0 - "Build Backend": Reading state information...
+Step #0 - "Build Backend": The following additional packages will be installed:
+Step #0 - "Build Backend":   binutils binutils-common binutils-x86-64-linux-gnu cpp cpp-14
+Step #0 - "Build Backend":   cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu gcc-14 gcc-14-x86-64-linux-gnu
+Step #0 - "Build Backend":   gcc-x86-64-linux-gnu krb5-locales libasan8 libatomic1 libbinutils
+Step #0 - "Build Backend":   libc-dev-bin libc6-dev libcc1-0 libcom-err2 libcrypt-dev libctf-nobfd0
+Step #0 - "Build Backend":   libctf0 libgcc-14-dev libgomp1 libgprofng0 libgssapi-krb5-2 libhwasan0
+Step #0 - "Build Backend":   libisl23 libitm1 libjansson4 libk5crypto3 libkeyutils1 libkrb5-3
+Step #0 - "Build Backend":   libkrb5support0 libldap-common libldap2 liblsan0 libmpc3 libmpfr6 libpq5
+Step #0 - "Build Backend":   libquadmath0 libsasl2-2 libsasl2-modules libsasl2-modules-db libsframe1
+Step #0 - "Build Backend":   libssl-dev libtsan2 libubsan1 linux-libc-dev manpages manpages-dev
+Step #0 - "Build Backend":   rpcsvc-proto
+Step #0 - "Build Backend": Suggested packages:
+Step #0 - "Build Backend":   binutils-doc gprofng-gui binutils-gold cpp-doc gcc-14-locales cpp-14-doc
+Step #0 - "Build Backend":   gcc-multilib make autoconf automake libtool flex bison gdb gcc-doc
+Step #0 - "Build Backend":   gcc-14-multilib gcc-14-doc gdb-x86-64-linux-gnu libc-devtools glibc-doc
+Step #0 - "Build Backend":   krb5-doc krb5-user postgresql-doc-17 libsasl2-modules-gssapi-mit
+Step #0 - "Build Backend":   | libsasl2-modules-gssapi-heimdal libsasl2-modules-ldap libsasl2-modules-otp
+Step #0 - "Build Backend":   libsasl2-modules-sql libssl-doc man-browser
+Step #0 - "Build Backend": The following NEW packages will be installed:
+Step #0 - "Build Backend":   binutils binutils-common binutils-x86-64-linux-gnu cpp cpp-14
+Step #0 - "Build Backend":   cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu gcc gcc-14
+Step #0 - "Build Backend":   gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu krb5-locales libasan8
+Step #0 - "Build Backend":   libatomic1 libbinutils libc-dev-bin libc6-dev libcc1-0 libcom-err2
+Step #0 - "Build Backend":   libcrypt-dev libctf-nobfd0 libctf0 libgcc-14-dev libgomp1 libgprofng0
+Step #0 - "Build Backend":   libgssapi-krb5-2 libhwasan0 libisl23 libitm1 libjansson4 libk5crypto3
+Step #0 - "Build Backend":   libkeyutils1 libkrb5-3 libkrb5support0 libldap-common libldap2 liblsan0
+Step #0 - "Build Backend":   libmpc3 libmpfr6 libpq-dev libpq5 libquadmath0 libsasl2-2 libsasl2-modules
+Step #0 - "Build Backend":   libsasl2-modules-db libsframe1 libssl-dev libtsan2 libubsan1 linux-libc-dev
+Step #0 - "Build Backend":   manpages manpages-dev rpcsvc-proto
+Step #0 - "Build Backend": 0 upgraded, 53 newly installed, 0 to remove and 0 not upgraded.
+Step #0 - "Build Backend": Need to get 64.8 MB of archives.
+Step #0 - "Build Backend": After this operation, 244 MB of additional disk space will be used.
+Step #0 - "Build Backend": Get:1 http://deb.debian.org/debian trixie/main amd64 krb5-locales all 1.21.3-5 [101 kB]
+Step #0 - "Build Backend": Get:2 http://deb.debian.org/debian trixie/main amd64 manpages all 6.9.1-1 [1393 kB]
+Step #0 - "Build Backend": Get:3 http://deb.debian.org/debian trixie/main amd64 libsframe1 amd64 2.44-3 [78.4 kB]
+Step #0 - "Build Backend": Get:4 http://deb.debian.org/debian trixie/main amd64 binutils-common amd64 2.44-3 [2509 kB]
+Step #0 - "Build Backend": Get:5 http://deb.debian.org/debian trixie/main amd64 libbinutils amd64 2.44-3 [534 kB]
+Step #0 - "Build Backend": Get:6 http://deb.debian.org/debian trixie/main amd64 libgprofng0 amd64 2.44-3 [808 kB]
+Step #0 - "Build Backend": Get:7 http://deb.debian.org/debian trixie/main amd64 libctf-nobfd0 amd64 2.44-3 [156 kB]
+Step #0 - "Build Backend": Get:8 http://deb.debian.org/debian trixie/main amd64 libctf0 amd64 2.44-3 [88.6 kB]
+Step #0 - "Build Backend": Get:9 http://deb.debian.org/debian trixie/main amd64 libjansson4 amd64 2.14-2+b3 [39.8 kB]
+Step #0 - "Build Backend": Get:10 http://deb.debian.org/debian trixie/main amd64 binutils-x86-64-linux-gnu amd64 2.44-3 [1014 kB]
+Step #0 - "Build Backend": Get:11 http://deb.debian.org/debian trixie/main amd64 binutils amd64 2.44-3 [265 kB]
+Step #0 - "Build Backend": Get:12 http://deb.debian.org/debian trixie/main amd64 libisl23 amd64 0.27-1 [659 kB]
+Step #0 - "Build Backend": Get:13 http://deb.debian.org/debian trixie/main amd64 libmpfr6 amd64 4.2.2-1 [729 kB]
+Step #0 - "Build Backend": Get:14 http://deb.debian.org/debian trixie/main amd64 libmpc3 amd64 1.3.1-1+b3 [52.2 kB]
+Step #0 - "Build Backend": Get:15 http://deb.debian.org/debian trixie/main amd64 cpp-14-x86-64-linux-gnu amd64 14.2.0-19 [11.0 MB]
+Step #0 - "Build Backend": Get:16 http://deb.debian.org/debian trixie/main amd64 cpp-14 amd64 14.2.0-19 [1280 B]
+Step #0 - "Build Backend": Get:17 http://deb.debian.org/debian trixie/main amd64 cpp-x86-64-linux-gnu amd64 4:14.2.0-1 [4840 B]
+Step #0 - "Build Backend": Get:18 http://deb.debian.org/debian trixie/main amd64 cpp amd64 4:14.2.0-1 [1568 B]
+Step #0 - "Build Backend": Get:19 http://deb.debian.org/debian trixie/main amd64 libcc1-0 amd64 14.2.0-19 [42.8 kB]
+Step #0 - "Build Backend": Get:20 http://deb.debian.org/debian trixie/main amd64 libgomp1 amd64 14.2.0-19 [137 kB]
+Step #0 - "Build Backend": Get:21 http://deb.debian.org/debian trixie/main amd64 libitm1 amd64 14.2.0-19 [26.0 kB]
+Step #0 - "Build Backend": Get:22 http://deb.debian.org/debian trixie/main amd64 libatomic1 amd64 14.2.0-19 [9308 B]
+Step #0 - "Build Backend": Get:23 http://deb.debian.org/debian trixie/main amd64 libasan8 amd64 14.2.0-19 [2725 kB]
+Step #0 - "Build Backend": Get:24 http://deb.debian.org/debian trixie/main amd64 liblsan0 amd64 14.2.0-19 [1204 kB]
+Step #0 - "Build Backend": Get:25 http://deb.debian.org/debian trixie/main amd64 libtsan2 amd64 14.2.0-19 [2460 kB]
+Step #0 - "Build Backend": Get:26 http://deb.debian.org/debian trixie/main amd64 libubsan1 amd64 14.2.0-19 [1074 kB]
+Step #0 - "Build Backend": Get:27 http://deb.debian.org/debian trixie/main amd64 libhwasan0 amd64 14.2.0-19 [1488 kB]
+Step #0 - "Build Backend": Get:28 http://deb.debian.org/debian trixie/main amd64 libquadmath0 amd64 14.2.0-19 [145 kB]
+Step #0 - "Build Backend": Get:29 http://deb.debian.org/debian trixie/main amd64 libgcc-14-dev amd64 14.2.0-19 [2672 kB]
+Step #0 - "Build Backend": Get:30 http://deb.debian.org/debian trixie/main amd64 gcc-14-x86-64-linux-gnu amd64 14.2.0-19 [21.4 MB]
+Step #0 - "Build Backend": Get:31 http://deb.debian.org/debian trixie/main amd64 gcc-14 amd64 14.2.0-19 [540 kB]
+Step #0 - "Build Backend": Get:32 http://deb.debian.org/debian trixie/main amd64 gcc-x86-64-linux-gnu amd64 4:14.2.0-1 [1436 B]
+Step #0 - "Build Backend": Get:33 http://deb.debian.org/debian trixie/main amd64 gcc amd64 4:14.2.0-1 [5136 B]
+Step #0 - "Build Backend": Get:34 http://deb.debian.org/debian trixie/main amd64 libc-dev-bin amd64 2.41-12+deb13u1 [58.5 kB]
+Step #0 - "Build Backend": Get:35 http://deb.debian.org/debian-security trixie-security/main amd64 linux-libc-dev all 6.12.73-1 [2745 kB]
+Step #0 - "Build Backend": Get:36 http://deb.debian.org/debian trixie/main amd64 libcrypt-dev amd64 1:4.4.38-1 [119 kB]
+Step #0 - "Build Backend": Get:37 http://deb.debian.org/debian trixie/main amd64 rpcsvc-proto amd64 1.4.3-1 [63.3 kB]
+Step #0 - "Build Backend": Get:38 http://deb.debian.org/debian trixie/main amd64 libc6-dev amd64 2.41-12+deb13u1 [1994 kB]
+Step #0 - "Build Backend": Get:39 http://deb.debian.org/debian trixie/main amd64 libcom-err2 amd64 1.47.2-3+b7 [25.0 kB]
+Step #0 - "Build Backend": Get:40 http://deb.debian.org/debian trixie/main amd64 libkrb5support0 amd64 1.21.3-5 [33.0 kB]
+Step #0 - "Build Backend": Get:41 http://deb.debian.org/debian trixie/main amd64 libk5crypto3 amd64 1.21.3-5 [81.5 kB]
+Step #0 - "Build Backend": Get:42 http://deb.debian.org/debian trixie/main amd64 libkeyutils1 amd64 1.6.3-6 [9456 B]
+Step #0 - "Build Backend": Get:43 http://deb.debian.org/debian trixie/main amd64 libkrb5-3 amd64 1.21.3-5 [326 kB]
+Step #0 - "Build Backend": Get:44 http://deb.debian.org/debian trixie/main amd64 libgssapi-krb5-2 amd64 1.21.3-5 [138 kB]
+Step #0 - "Build Backend": Get:45 http://deb.debian.org/debian trixie/main amd64 libldap-common all 2.6.10+dfsg-1 [35.1 kB]
+Step #0 - "Build Backend": Get:46 http://deb.debian.org/debian trixie/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg1-9 [19.8 kB]
+Step #0 - "Build Backend": Get:47 http://deb.debian.org/debian trixie/main amd64 libsasl2-2 amd64 2.1.28+dfsg1-9 [57.5 kB]
+Step #0 - "Build Backend": Get:48 http://deb.debian.org/debian trixie/main amd64 libldap2 amd64 2.6.10+dfsg-1 [194 kB]
+Step #0 - "Build Backend": Get:49 http://deb.debian.org/debian-security trixie-security/main amd64 libpq5 amd64 17.8-0+deb13u1 [228 kB]
+Step #0 - "Build Backend": Get:50 http://deb.debian.org/debian-security trixie-security/main amd64 libssl-dev amd64 3.5.4-1~deb13u2 [2958 kB]
+Step #0 - "Build Backend": Get:51 http://deb.debian.org/debian-security trixie-security/main amd64 libpq-dev amd64 17.8-0+deb13u1 [152 kB]
+Step #0 - "Build Backend": Get:52 http://deb.debian.org/debian trixie/main amd64 libsasl2-modules amd64 2.1.28+dfsg1-9 [66.7 kB]
+Step #0 - "Build Backend": Get:53 http://deb.debian.org/debian trixie/main amd64 manpages-dev all 6.9.1-1 [2122 kB]
+Step #0 - "Build Backend": [91mdebconf: unable to initialize frontend: Dialog
+Step #0 - "Build Backend": debconf: (TERM is not set, so the dialog frontend is not usable.)
+Step #0 - "Build Backend": debconf: falling back to frontend: Readline
+Step #0 - "Build Backend": [0m[91mdebconf: unable to initialize frontend: Readline
+Step #0 - "Build Backend": debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 53.)
+Step #0 - "Build Backend": debconf: falling back to frontend: Teletype
+Step #0 - "Build Backend": [0m[91mdebconf: unable to initialize frontend: Teletype
+Step #0 - "Build Backend": debconf: (This frontend requires a controlling tty.)
+Step #0 - "Build Backend": debconf: falling back to frontend: Noninteractive
+Step #0 - "Build Backend": [0mFetched 64.8 MB in 1s (100 MB/s)
+Step #0 - "Build Backend": Selecting previously unselected package krb5-locales.
+Step #0 - "Build Backend": (Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5645 files and directories currently installed.)
+Step #0 - "Build Backend": Preparing to unpack .../00-krb5-locales_1.21.3-5_all.deb ...
+Step #0 - "Build Backend": Unpacking krb5-locales (1.21.3-5) ...
+Step #0 - "Build Backend": Selecting previously unselected package manpages.
+Step #0 - "Build Backend": Preparing to unpack .../01-manpages_6.9.1-1_all.deb ...
+Step #0 - "Build Backend": Unpacking manpages (6.9.1-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libsframe1:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../02-libsframe1_2.44-3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libsframe1:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Selecting previously unselected package binutils-common:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../03-binutils-common_2.44-3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking binutils-common:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Selecting previously unselected package libbinutils:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../04-libbinutils_2.44-3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libbinutils:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Selecting previously unselected package libgprofng0:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../05-libgprofng0_2.44-3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libgprofng0:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Selecting previously unselected package libctf-nobfd0:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../06-libctf-nobfd0_2.44-3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libctf-nobfd0:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Selecting previously unselected package libctf0:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../07-libctf0_2.44-3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libctf0:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Selecting previously unselected package libjansson4:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../08-libjansson4_2.14-2+b3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libjansson4:amd64 (2.14-2+b3) ...
+Step #0 - "Build Backend": Selecting previously unselected package binutils-x86-64-linux-gnu.
+Step #0 - "Build Backend": Preparing to unpack .../09-binutils-x86-64-linux-gnu_2.44-3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking binutils-x86-64-linux-gnu (2.44-3) ...
+Step #0 - "Build Backend": Selecting previously unselected package binutils.
+Step #0 - "Build Backend": Preparing to unpack .../10-binutils_2.44-3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking binutils (2.44-3) ...
+Step #0 - "Build Backend": Selecting previously unselected package libisl23:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../11-libisl23_0.27-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libisl23:amd64 (0.27-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libmpfr6:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../12-libmpfr6_4.2.2-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libmpfr6:amd64 (4.2.2-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libmpc3:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../13-libmpc3_1.3.1-1+b3_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libmpc3:amd64 (1.3.1-1+b3) ...
+Step #0 - "Build Backend": Selecting previously unselected package cpp-14-x86-64-linux-gnu.
+Step #0 - "Build Backend": Preparing to unpack .../14-cpp-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package cpp-14.
+Step #0 - "Build Backend": Preparing to unpack .../15-cpp-14_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking cpp-14 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package cpp-x86-64-linux-gnu.
+Step #0 - "Build Backend": Preparing to unpack .../16-cpp-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package cpp.
+Step #0 - "Build Backend": Preparing to unpack .../17-cpp_4%3a14.2.0-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking cpp (4:14.2.0-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libcc1-0:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../18-libcc1-0_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libcc1-0:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libgomp1:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../19-libgomp1_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libgomp1:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libitm1:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../20-libitm1_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libitm1:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libatomic1:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../21-libatomic1_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libatomic1:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libasan8:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../22-libasan8_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libasan8:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package liblsan0:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../23-liblsan0_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking liblsan0:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libtsan2:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../24-libtsan2_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libtsan2:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libubsan1:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../25-libubsan1_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libubsan1:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libhwasan0:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../26-libhwasan0_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libhwasan0:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libquadmath0:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../27-libquadmath0_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libquadmath0:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package libgcc-14-dev:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../28-libgcc-14-dev_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libgcc-14-dev:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package gcc-14-x86-64-linux-gnu.
+Step #0 - "Build Backend": Preparing to unpack .../29-gcc-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package gcc-14.
+Step #0 - "Build Backend": Preparing to unpack .../30-gcc-14_14.2.0-19_amd64.deb ...
+Step #0 - "Build Backend": Unpacking gcc-14 (14.2.0-19) ...
+Step #0 - "Build Backend": Selecting previously unselected package gcc-x86-64-linux-gnu.
+Step #0 - "Build Backend": Preparing to unpack .../31-gcc-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package gcc.
+Step #0 - "Build Backend": Preparing to unpack .../32-gcc_4%3a14.2.0-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking gcc (4:14.2.0-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libc-dev-bin.
+Step #0 - "Build Backend": Preparing to unpack .../33-libc-dev-bin_2.41-12+deb13u1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libc-dev-bin (2.41-12+deb13u1) ...
+Step #0 - "Build Backend": Selecting previously unselected package linux-libc-dev.
+Step #0 - "Build Backend": Preparing to unpack .../34-linux-libc-dev_6.12.73-1_all.deb ...
+Step #0 - "Build Backend": Unpacking linux-libc-dev (6.12.73-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libcrypt-dev:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../35-libcrypt-dev_1%3a4.4.38-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libcrypt-dev:amd64 (1:4.4.38-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package rpcsvc-proto.
+Step #0 - "Build Backend": Preparing to unpack .../36-rpcsvc-proto_1.4.3-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking rpcsvc-proto (1.4.3-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libc6-dev:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../37-libc6-dev_2.41-12+deb13u1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libc6-dev:amd64 (2.41-12+deb13u1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libcom-err2:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../38-libcom-err2_1.47.2-3+b7_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libcom-err2:amd64 (1.47.2-3+b7) ...
+Step #0 - "Build Backend": Selecting previously unselected package libkrb5support0:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../39-libkrb5support0_1.21.3-5_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libkrb5support0:amd64 (1.21.3-5) ...
+Step #0 - "Build Backend": Selecting previously unselected package libk5crypto3:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../40-libk5crypto3_1.21.3-5_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libk5crypto3:amd64 (1.21.3-5) ...
+Step #0 - "Build Backend": Selecting previously unselected package libkeyutils1:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../41-libkeyutils1_1.6.3-6_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libkeyutils1:amd64 (1.6.3-6) ...
+Step #0 - "Build Backend": Selecting previously unselected package libkrb5-3:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../42-libkrb5-3_1.21.3-5_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libkrb5-3:amd64 (1.21.3-5) ...
+Step #0 - "Build Backend": Selecting previously unselected package libgssapi-krb5-2:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../43-libgssapi-krb5-2_1.21.3-5_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libgssapi-krb5-2:amd64 (1.21.3-5) ...
+Step #0 - "Build Backend": Selecting previously unselected package libldap-common.
+Step #0 - "Build Backend": Preparing to unpack .../44-libldap-common_2.6.10+dfsg-1_all.deb ...
+Step #0 - "Build Backend": Unpacking libldap-common (2.6.10+dfsg-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libsasl2-modules-db:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../45-libsasl2-modules-db_2.1.28+dfsg1-9_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+Step #0 - "Build Backend": Selecting previously unselected package libsasl2-2:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../46-libsasl2-2_2.1.28+dfsg1-9_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+Step #0 - "Build Backend": Selecting previously unselected package libldap2:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../47-libldap2_2.6.10+dfsg-1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libldap2:amd64 (2.6.10+dfsg-1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libpq5:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../48-libpq5_17.8-0+deb13u1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libpq5:amd64 (17.8-0+deb13u1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libssl-dev:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../49-libssl-dev_3.5.4-1~deb13u2_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libssl-dev:amd64 (3.5.4-1~deb13u2) ...
+Step #0 - "Build Backend": Selecting previously unselected package libpq-dev.
+Step #0 - "Build Backend": Preparing to unpack .../50-libpq-dev_17.8-0+deb13u1_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libpq-dev (17.8-0+deb13u1) ...
+Step #0 - "Build Backend": Selecting previously unselected package libsasl2-modules:amd64.
+Step #0 - "Build Backend": Preparing to unpack .../51-libsasl2-modules_2.1.28+dfsg1-9_amd64.deb ...
+Step #0 - "Build Backend": Unpacking libsasl2-modules:amd64 (2.1.28+dfsg1-9) ...
+Step #0 - "Build Backend": Selecting previously unselected package manpages-dev.
+Step #0 - "Build Backend": Preparing to unpack .../52-manpages-dev_6.9.1-1_all.deb ...
+Step #0 - "Build Backend": Unpacking manpages-dev (6.9.1-1) ...
+Step #0 - "Build Backend": Setting up libkeyutils1:amd64 (1.6.3-6) ...
+Step #0 - "Build Backend": Setting up manpages (6.9.1-1) ...
+Step #0 - "Build Backend": Setting up libsasl2-modules:amd64 (2.1.28+dfsg1-9) ...
+Step #0 - "Build Backend": Setting up binutils-common:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Setting up linux-libc-dev (6.12.73-1) ...
+Step #0 - "Build Backend": Setting up libctf-nobfd0:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Setting up krb5-locales (1.21.3-5) ...
+Step #0 - "Build Backend": Setting up libcom-err2:amd64 (1.47.2-3+b7) ...
+Step #0 - "Build Backend": Setting up libgomp1:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libldap-common (2.6.10+dfsg-1) ...
+Step #0 - "Build Backend": Setting up libsframe1:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Setting up libjansson4:amd64 (2.14-2+b3) ...
+Step #0 - "Build Backend": Setting up libkrb5support0:amd64 (1.21.3-5) ...
+Step #0 - "Build Backend": Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+Step #0 - "Build Backend": Setting up rpcsvc-proto (1.4.3-1) ...
+Step #0 - "Build Backend": Setting up libmpfr6:amd64 (4.2.2-1) ...
+Step #0 - "Build Backend": Setting up libquadmath0:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libssl-dev:amd64 (3.5.4-1~deb13u2) ...
+Step #0 - "Build Backend": Setting up libmpc3:amd64 (1.3.1-1+b3) ...
+Step #0 - "Build Backend": Setting up libatomic1:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libk5crypto3:amd64 (1.21.3-5) ...
+Step #0 - "Build Backend": Setting up libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+Step #0 - "Build Backend": Setting up libubsan1:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libhwasan0:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libcrypt-dev:amd64 (1:4.4.38-1) ...
+Step #0 - "Build Backend": Setting up libasan8:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libkrb5-3:amd64 (1.21.3-5) ...
+Step #0 - "Build Backend": Setting up libtsan2:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libbinutils:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Setting up libisl23:amd64 (0.27-1) ...
+Step #0 - "Build Backend": Setting up libc-dev-bin (2.41-12+deb13u1) ...
+Step #0 - "Build Backend": Setting up libcc1-0:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libldap2:amd64 (2.6.10+dfsg-1) ...
+Step #0 - "Build Backend": Setting up liblsan0:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libitm1:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libctf0:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Setting up manpages-dev (6.9.1-1) ...
+Step #0 - "Build Backend": Setting up libgprofng0:amd64 (2.44-3) ...
+Step #0 - "Build Backend": Setting up libgssapi-krb5-2:amd64 (1.21.3-5) ...
+Step #0 - "Build Backend": Setting up cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up cpp-14 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up libc6-dev:amd64 (2.41-12+deb13u1) ...
+Step #0 - "Build Backend": Setting up libgcc-14-dev:amd64 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up binutils-x86-64-linux-gnu (2.44-3) ...
+Step #0 - "Build Backend": Setting up cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+Step #0 - "Build Backend": Setting up libpq5:amd64 (17.8-0+deb13u1) ...
+Step #0 - "Build Backend": Setting up libpq-dev (17.8-0+deb13u1) ...
+Step #0 - "Build Backend": Setting up binutils (2.44-3) ...
+Step #0 - "Build Backend": Setting up cpp (4:14.2.0-1) ...
+Step #0 - "Build Backend": Setting up gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+Step #0 - "Build Backend": Setting up gcc-14 (14.2.0-19) ...
+Step #0 - "Build Backend": Setting up gcc (4:14.2.0-1) ...
+Step #0 - "Build Backend": Processing triggers for libc-bin (2.41-12+deb13u1) ...
+Step #0 - "Build Backend": Removing intermediate container 30ce5ffce1d8
+Step #0 - "Build Backend":  ---> 4ed8a924a95f
+Step #0 - "Build Backend": Step 4/8 : COPY requirements.txt .
+Step #0 - "Build Backend":  ---> c1b28857b28b
+Step #0 - "Build Backend": Step 5/8 : RUN pip install --no-cache-dir -r requirements.txt
+Step #0 - "Build Backend":  ---> Running in d9d95bb1bb47
+Step #0 - "Build Backend": Collecting annotated-doc==0.0.4 (from -r requirements.txt (line 1))
+Step #0 - "Build Backend":   Downloading annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+Step #0 - "Build Backend": Collecting annotated-types==0.7.0 (from -r requirements.txt (line 2))
+Step #0 - "Build Backend":   Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Step #0 - "Build Backend": Collecting anyio==4.12.1 (from -r requirements.txt (line 3))
+Step #0 - "Build Backend":   Downloading anyio-4.12.1-py3-none-any.whl.metadata (4.3 kB)
+Step #0 - "Build Backend": Collecting bcrypt (from -r requirements.txt (line 4))
+Step #0 - "Build Backend":   Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+Step #0 - "Build Backend": Collecting click==8.3.1 (from -r requirements.txt (line 5))
+Step #0 - "Build Backend":   Downloading click-8.3.1-py3-none-any.whl.metadata (2.6 kB)
+Step #0 - "Build Backend": Collecting colorama==0.4.6 (from -r requirements.txt (line 6))
+Step #0 - "Build Backend":   Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+Step #0 - "Build Backend": Collecting dnspython==2.8.0 (from -r requirements.txt (line 7))
+Step #0 - "Build Backend":   Downloading dnspython-2.8.0-py3-none-any.whl.metadata (5.7 kB)
+Step #0 - "Build Backend": Collecting email-validator==2.3.0 (from -r requirements.txt (line 8))
+Step #0 - "Build Backend":   Downloading email_validator-2.3.0-py3-none-any.whl.metadata (26 kB)
+Step #0 - "Build Backend": Collecting fastapi==0.135.1 (from -r requirements.txt (line 9))
+Step #0 - "Build Backend":   Downloading fastapi-0.135.1-py3-none-any.whl.metadata (30 kB)
+Step #0 - "Build Backend": Collecting greenlet==3.3.2 (from -r requirements.txt (line 10))
+Step #0 - "Build Backend":   Downloading greenlet-3.3.2-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.7 kB)
+Step #0 - "Build Backend": Collecting h11==0.16.0 (from -r requirements.txt (line 11))
+Step #0 - "Build Backend":   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Step #0 - "Build Backend": Collecting httptools==0.7.1 (from -r requirements.txt (line 12))
+Step #0 - "Build Backend":   Downloading httptools-0.7.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+Step #0 - "Build Backend": Collecting idna==3.11 (from -r requirements.txt (line 13))
+Step #0 - "Build Backend":   Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Step #0 - "Build Backend": Collecting psycopg2-binary (from -r requirements.txt (line 15))
+Step #0 - "Build Backend":   Downloading psycopg2_binary-2.9.11-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Step #0 - "Build Backend": Collecting pydantic==2.12.5 (from -r requirements.txt (line 16))
+Step #0 - "Build Backend":   Downloading pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+Step #0 - "Build Backend":      ???????????????????????????????????????? 90.6/90.6 kB 26.0 MB/s eta 0:00:00
+Step #0 - "Build Backend": Collecting pydantic_core==2.41.5 (from -r requirements.txt (line 17))
+Step #0 - "Build Backend":   Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+Step #0 - "Build Backend": Collecting pydantic-settings (from -r requirements.txt (line 18))
+Step #0 - "Build Backend":   Downloading pydantic_settings-2.13.1-py3-none-any.whl.metadata (3.4 kB)
+Step #0 - "Build Backend": Collecting python-dotenv==1.2.2 (from -r requirements.txt (line 19))
+Step #0 - "Build Backend":   Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+Step #0 - "Build Backend": Collecting python-multipart==0.0.22 (from -r requirements.txt (line 21))
+Step #0 - "Build Backend":   Downloading python_multipart-0.0.22-py3-none-any.whl.metadata (1.8 kB)
+Step #0 - "Build Backend": Collecting PyYAML==6.0.3 (from -r requirements.txt (line 22))
+Step #0 - "Build Backend":   Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Step #0 - "Build Backend": Collecting SQLAlchemy==2.0.48 (from -r requirements.txt (line 23))
+Step #0 - "Build Backend":   Downloading sqlalchemy-2.0.48-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+Step #0 - "Build Backend": Collecting starlette==0.52.1 (from -r requirements.txt (line 24))
+Step #0 - "Build Backend":   Downloading starlette-0.52.1-py3-none-any.whl.metadata (6.3 kB)
+Step #0 - "Build Backend": Collecting typing-inspection==0.4.2 (from -r requirements.txt (line 25))
+Step #0 - "Build Backend":   Downloading typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+Step #0 - "Build Backend": Collecting typing_extensions==4.15.0 (from -r requirements.txt (line 26))
+Step #0 - "Build Backend":   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Step #0 - "Build Backend": Collecting uvicorn==0.41.0 (from -r requirements.txt (line 27))
+Step #0 - "Build Backend":   Downloading uvicorn-0.41.0-py3-none-any.whl.metadata (6.7 kB)
+Step #0 - "Build Backend": Collecting watchfiles==1.1.1 (from -r requirements.txt (line 28))
+Step #0 - "Build Backend":   Downloading watchfiles-1.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+Step #0 - "Build Backend": Collecting websockets==16.0 (from -r requirements.txt (line 29))
+Step #0 - "Build Backend":   Downloading websockets-16.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.8 kB)
+Step #0 - "Build Backend": Collecting passlib[bcrypt] (from -r requirements.txt (line 14))
+Step #0 - "Build Backend":   Downloading passlib-1.7.4-py2.py3-none-any.whl.metadata (1.7 kB)
+Step #0 - "Build Backend": Collecting python-jose[cryptography] (from -r requirements.txt (line 20))
+Step #0 - "Build Backend":   Downloading python_jose-3.5.0-py2.py3-none-any.whl.metadata (5.5 kB)
+Step #0 - "Build Backend": Collecting ecdsa!=0.15 (from python-jose[cryptography]->-r requirements.txt (line 20))
+Step #0 - "Build Backend":   Downloading ecdsa-0.19.1-py2.py3-none-any.whl.metadata (29 kB)
+Step #0 - "Build Backend": Collecting rsa!=4.1.1,!=4.4,<5.0,>=4.0 (from python-jose[cryptography]->-r requirements.txt (line 20))
+Step #0 - "Build Backend":   Downloading rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Step #0 - "Build Backend": Collecting pyasn1>=0.5.0 (from python-jose[cryptography]->-r requirements.txt (line 20))
+Step #0 - "Build Backend":   Downloading pyasn1-0.6.2-py3-none-any.whl.metadata (8.4 kB)
+Step #0 - "Build Backend": Collecting cryptography>=3.4.0 (from python-jose[cryptography]->-r requirements.txt (line 20))
+Step #0 - "Build Backend":   Downloading cryptography-46.0.5-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+Step #0 - "Build Backend": Collecting cffi>=2.0.0 (from cryptography>=3.4.0->python-jose[cryptography]->-r requirements.txt (line 20))
+Step #0 - "Build Backend":   Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+Step #0 - "Build Backend": Collecting six>=1.9.0 (from ecdsa!=0.15->python-jose[cryptography]->-r requirements.txt (line 20))
+Step #0 - "Build Backend":   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Step #0 - "Build Backend": Collecting pycparser (from cffi>=2.0.0->cryptography>=3.4.0->python-jose[cryptography]->-r requirements.txt (line 20))
+Step #0 - "Build Backend":   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Step #0 - "Build Backend": Downloading annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+Step #0 - "Build Backend": Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Step #0 - "Build Backend": Downloading anyio-4.12.1-py3-none-any.whl (113 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 113.6/113.6 kB 222.4 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading click-8.3.1-py3-none-any.whl (108 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 108.3/108.3 kB 205.2 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Step #0 - "Build Backend": Downloading dnspython-2.8.0-py3-none-any.whl (331 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 331.1/331.1 kB 50.5 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading email_validator-2.3.0-py3-none-any.whl (35 kB)
+Step #0 - "Build Backend": Downloading fastapi-0.135.1-py3-none-any.whl (116 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 117.0/117.0 kB 237.2 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading greenlet-3.3.2-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (594 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 594.2/594.2 kB 247.2 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Step #0 - "Build Backend": Downloading httptools-0.7.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (456 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 456.6/456.6 kB 220.0 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading idna-3.11-py3-none-any.whl (71 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 71.0/71.0 kB 200.6 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 463.6/463.6 kB 268.5 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 2.1/2.1 MB 229.1 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+Step #0 - "Build Backend": Downloading python_multipart-0.0.22-py3-none-any.whl (24 kB)
+Step #0 - "Build Backend": Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 806.6/806.6 kB 273.4 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading sqlalchemy-2.0.48-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 3.3/3.3 MB 225.5 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading starlette-0.52.1-py3-none-any.whl (74 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 74.3/74.3 kB 207.8 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+Step #0 - "Build Backend": Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 44.6/44.6 kB 152.2 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading uvicorn-0.41.0-py3-none-any.whl (68 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 68.8/68.8 kB 200.0 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading watchfiles-1.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 456.1/456.1 kB 69.7 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading websockets-16.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (184 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 184.6/184.6 kB 255.1 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 278.2/278.2 kB 262.7 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading psycopg2_binary-2.9.11-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.2 MB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 4.2/4.2 MB 243.3 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading pydantic_settings-2.13.1-py3-none-any.whl (58 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 58.9/58.9 kB 199.3 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading cryptography-46.0.5-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 4.5/4.5 MB 252.4 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading ecdsa-0.19.1-py2.py3-none-any.whl (150 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 150.6/150.6 kB 246.5 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading pyasn1-0.6.2-py3-none-any.whl (83 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 83.4/83.4 kB 228.6 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
+Step #0 - "Build Backend": Downloading passlib-1.7.4-py2.py3-none-any.whl (525 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 525.6/525.6 kB 221.7 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading python_jose-3.5.0-py2.py3-none-any.whl (34 kB)
+Step #0 - "Build Backend": Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+Step #0 - "Build Backend":    ??????????????????????????????????????? 215.6/215.6 kB 266.9 MB/s eta 0:00:00
+Step #0 - "Build Backend": Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Step #0 - "Build Backend": Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+Step #0 - "Build Backend":    ???????????????????????????????????????? 48.2/48.2 kB 194.4 MB/s eta 0:00:00
+Step #0 - "Build Backend": Installing collected packages: passlib, websockets, typing_extensions, six, PyYAML, python-multipart, python-dotenv, pycparser, pyasn1, psycopg2-binary, idna, httptools, h11, greenlet, dnspython, colorama, click, bcrypt, annotated-types, annotated-doc, uvicorn, typing-inspection, SQLAlchemy, rsa, pydantic_core, email-validator, ecdsa, cffi, anyio, watchfiles, starlette, python-jose, pydantic, cryptography, pydantic-settings, fastapi
+Step #0 - "Build Backend": Successfully installed PyYAML-6.0.3 SQLAlchemy-2.0.48 annotated-doc-0.0.4 annotated-types-0.7.0 anyio-4.12.1 bcrypt-5.0.0 cffi-2.0.0 click-8.3.1 colorama-0.4.6 cryptography-46.0.5 dnspython-2.8.0 ecdsa-0.19.1 email-validator-2.3.0 fastapi-0.135.1 greenlet-3.3.2 h11-0.16.0 httptools-0.7.1 idna-3.11 passlib-1.7.4 psycopg2-binary-2.9.11 pyasn1-0.6.2 pycparser-3.0 pydantic-2.12.5 pydantic-settings-2.13.1 pydantic_core-2.41.5 python-dotenv-1.2.2 python-jose-3.5.0 python-multipart-0.0.22 rsa-4.9.1 six-1.17.0 starlette-0.52.1 typing-inspection-0.4.2 typing_extensions-4.15.0 uvicorn-0.41.0 watchfiles-1.1.1 websockets-16.0
+Step #0 - "Build Backend": [91mWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+Step #0 - "Build Backend": [0m[91m
+Step #0 - "Build Backend": [notice] A new release of pip is available: 24.0 -> 26.0.1
+Step #0 - "Build Backend": [notice] To update, run: pip install --upgrade pip
+Step #0 - "Build Backend": [0mRemoving intermediate container d9d95bb1bb47
+Step #0 - "Build Backend":  ---> 086a089d22e6
+Step #0 - "Build Backend": Step 6/8 : COPY . .
+Step #0 - "Build Backend":  ---> 3f3fb049b3ca
+Step #0 - "Build Backend": Step 7/8 : EXPOSE 8000
+Step #0 - "Build Backend":  ---> Running in eeda7096af05
+Step #0 - "Build Backend": Removing intermediate container eeda7096af05
+Step #0 - "Build Backend":  ---> 4fb44921dcd4
+Step #0 - "Build Backend": Step 8/8 : CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+Step #0 - "Build Backend":  ---> Running in a5247b783c7d
+Step #0 - "Build Backend": Removing intermediate container a5247b783c7d
+Step #0 - "Build Backend":  ---> b287abdb43fa
+Step #0 - "Build Backend": Successfully built b287abdb43fa
+Step #0 - "Build Backend": Successfully tagged us-central1-docker.pkg.dev/rosy-hope-489506-p3/erp-repo/backend:latest
+Finished Step #0 - "Build Backend"
+Starting Step #1 - "Push Backend"
+Step #1 - "Push Backend": Already have image (with digest): gcr.io/cloud-builders/docker
+Step #1 - "Push Backend": The push refers to repository [us-central1-docker.pkg.dev/rosy-hope-489506-p3/erp-repo/backend]
+Step #1 - "Push Backend": a60fa3e3c65e: Preparing
+Step #1 - "Push Backend": 4fcafed1a3b1: Preparing
+Step #1 - "Push Backend": b51a9be9fcba: Preparing
+Step #1 - "Push Backend": 58e41387fab4: Preparing
+Step #1 - "Push Backend": ead3c404c536: Preparing
+Step #1 - "Push Backend": fa1d322086e6: Preparing
+Step #1 - "Push Backend": 5184c31ad48f: Preparing
+Step #1 - "Push Backend": b0c20bcd44fe: Preparing
+Step #1 - "Push Backend": a257f20c716c: Preparing
+Step #1 - "Push Backend": ead3c404c536: Pushed
+Step #1 - "Push Backend": a60fa3e3c65e: Pushed
+Step #1 - "Push Backend": b51a9be9fcba: Pushed
+Step #1 - "Push Backend": fa1d322086e6: Pushed
+Step #1 - "Push Backend": b0c20bcd44fe: Pushed
+Step #1 - "Push Backend": 5184c31ad48f: Pushed
+Step #1 - "Push Backend": 4fcafed1a3b1: Pushed
+Step #1 - "Push Backend": a257f20c716c: Pushed
+Step #1 - "Push Backend": 58e41387fab4: Pushed
+Step #1 - "Push Backend": latest: digest: sha256:3e7751f7a7f74b6326c5cdd57d22f02af126fc1310c92aa1e0f5e1d2dc67c3d6 size: 2206
+Finished Step #1 - "Push Backend"
+Starting Step #2 - "Deploy Backend"
+Step #2 - "Deploy Backend": Pulling image: gcr.io/google.com/cloudsdktool/cloud-sdk
+Step #2 - "Deploy Backend": Using default tag: latest
+Step #2 - "Deploy Backend": latest: Pulling from google.com/cloudsdktool/cloud-sdk
+Step #2 - "Deploy Backend": 6bc9f599b3ef: Already exists
+Step #2 - "Deploy Backend": 1c3d35f6bcc6: Pulling fs layer
+Step #2 - "Deploy Backend": 0a6584f0c5b9: Pulling fs layer
+Step #2 - "Deploy Backend": ecdae679a707: Pulling fs layer
+Step #2 - "Deploy Backend": 7f7307b140ac: Pulling fs layer
+Step #2 - "Deploy Backend": 6e4138e9db03: Pulling fs layer
+Step #2 - "Deploy Backend": 6e4138e9db03: Verifying Checksum
+Step #2 - "Deploy Backend": 6e4138e9db03: Download complete
+Step #2 - "Deploy Backend": 1c3d35f6bcc6: Verifying Checksum
+Step #2 - "Deploy Backend": 1c3d35f6bcc6: Download complete
+Step #2 - "Deploy Backend": 7f7307b140ac: Verifying Checksum
+Step #2 - "Deploy Backend": 7f7307b140ac: Download complete
+Step #2 - "Deploy Backend": 1c3d35f6bcc6: Pull complete
+Step #2 - "Deploy Backend": ecdae679a707: Verifying Checksum
+Step #2 - "Deploy Backend": ecdae679a707: Download complete
+Step #2 - "Deploy Backend": 0a6584f0c5b9: Verifying Checksum
+Step #2 - "Deploy Backend": 0a6584f0c5b9: Download complete
+Step #2 - "Deploy Backend": 0a6584f0c5b9: Pull complete
+Step #2 - "Deploy Backend": ecdae679a707: Pull complete
+Step #2 - "Deploy Backend": 7f7307b140ac: Pull complete
+Step #2 - "Deploy Backend": 6e4138e9db03: Pull complete
+Step #2 - "Deploy Backend": Digest: sha256:89c029fadc744a88ab909a429dae4ae5d36a0764a72c7ad24a47ed54c92a9693
+Step #2 - "Deploy Backend": Status: Downloaded newer image for gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+Step #2 - "Deploy Backend": gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+Step #2 - "Deploy Backend": Deploying container to Cloud Run service [school-erp-backend] in project [rosy-hope-489506-p3] region [us-central1]
+Step #2 - "Deploy Backend": Deploying...
+Step #2 - "Deploy Backend": Creating Revision.................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................failed
+Step #2 - "Deploy Backend": Deployment failed
+Step #2 - "Deploy Backend": ERROR: (gcloud.run.deploy) The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.
+Step #2 - "Deploy Backend":
+Step #2 - "Deploy Backend": Logs URL: https://console.cloud.google.com/logs/viewer?project=rosy-hope-489506-p3&resource=cloud_run_revision/service_name/school-erp-backend/revision_name/school-erp-backend-00002-bpv&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22school-erp-backend%22%0Aresource.labels.revision_name%3D%22school-erp-backend-00002-bpv%22
+Step #2 - "Deploy Backend": For more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start
+Finished Step #2 - "Deploy Backend"
+ERROR
+ERROR: build step 2 "gcr.io/google.com/cloudsdktool/cloud-sdk" failed: step exited with non-zero status: 1
+-----------------------------------------------------

@@ -28,7 +28,7 @@ interface StudentFeeDetail {
 
 export default function FinanceView() {
     const user = useAuthStore((state) => state.user);
-    const clientId = user?.client_id || 'Prahitha Educational';
+    const clientId = user?.client_id || 'Prahitha Edu';
 
     const [summaryData, setSummaryData] = useState<FinanceSummary[]>([]);
     const [selectedClass, setSelectedClass] = useState<string | null>(null);

@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 export default function AddStudentView() {
     const { user } = useAuthStore();
-    const clientId = user?.client_id || 'Prahitha Educational';
+    const clientId = user?.client_id || 'Prahitha Edu';
     const [activeTab, setActiveTab] = useState<'form' | 'csv'>('form');
 
     // Form State

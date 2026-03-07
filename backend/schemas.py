@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import date, datetime
 from enum import Enum
+from config import settings
 
 class RoleEnum(str, Enum):
     admin = "admin"
@@ -23,7 +24,7 @@ class ProfileBase(BaseModel):
     photo_url: Optional[str] = None
 
 class ProfileCreate(ProfileBase):
-    client_id: str = "Prahitha Educational"
+    client_id: str = settings.DEFAULT_CLIENT_ID
 
 class Profile(ProfileBase):
     id: int
@@ -37,7 +38,7 @@ class CourseBase(BaseModel):
     description: str
 
 class CourseCreate(CourseBase):
-    client_id: str = "Prahitha Educational"
+    client_id: str = settings.DEFAULT_CLIENT_ID
 
 class Course(CourseBase):
     id: int
@@ -53,11 +54,11 @@ class UserBase(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
-    client_id: str = "Prahitha Educational"
+    client_id: str = settings.DEFAULT_CLIENT_ID
 
 class UserCreate(UserBase):
     password: str
-    client_id: str = "Prahitha Educational"
+    client_id: str = settings.DEFAULT_CLIENT_ID
 
 class User(UserBase):
     id: int
@@ -160,7 +161,7 @@ class StudentBasicInfo(BaseModel):
     last_name: str
 
 class AttendanceRecordCreate(BaseModel):
-    client_id: str = "Prahitha Educational"
+    client_id: str = settings.DEFAULT_CLIENT_ID
     student_id: int
     date: date
     status: str
@@ -179,7 +180,7 @@ class GalleryItem(BaseModel):
         from_attributes = True
 
 class StudentCreate(BaseModel):
-    client_id: str = "Prahitha Educational"
+    client_id: str = settings.DEFAULT_CLIENT_ID
     email: EmailStr
     password: str
     first_name: str
@@ -208,7 +209,7 @@ class FeeRecord(FeeRecordBase):
         from_attributes = True
 
 class FeePaymentUpdate(BaseModel):
-    client_id: str = "Prahitha Educational"
+    client_id: str = settings.DEFAULT_CLIENT_ID
     amount_paid: float
 
 class ClassFeeSummary(BaseModel):

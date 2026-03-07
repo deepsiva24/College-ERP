@@ -99,7 +99,7 @@ class GalleryItem(Base):
     __tablename__ = "gallery_items"
 
     id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(String, index=True, default="Prahitha Educational")
+    client_id = Column(String, index=True, default="Prahitha Edu")
     title = Column(String)
     image_url = Column(String)
     description = Column(String, nullable=True)

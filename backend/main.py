@@ -30,3 +30,9 @@ app.include_router(dashboard.router)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the School/College ERP API v2.0"}
+
+
+@app.get("/config")
+def get_app_config():
+    """Returns runtime configuration for the frontend (no secrets)."""
+    return {"default_client_id": settings.DEFAULT_CLIENT_ID}

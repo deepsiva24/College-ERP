@@ -25,7 +25,7 @@ interface AttendanceSummaryRecord {
 
 export default function AttendanceView() {
     const user = useAuthStore((state) => state.user);
-    const clientId = user?.client_id || 'Prahitha Educational';
+    const clientId = user?.client_id || 'Prahitha Edu';
     const [studentRecords, setStudentRecords] = useState<Attendance[]>([]);
     const [summaryRecords, setSummaryRecords] = useState<AttendanceSummaryRecord[]>([]);
     const [loading, setLoading] = useState(true);
