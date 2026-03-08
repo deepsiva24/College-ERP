@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
-import { IndianRupee, ArrowLeft, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { IndianRupee, ArrowLeft, CheckCircle, AlertCircle, Clock, Upload, FileSpreadsheet, CheckCircle2, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { getTenantFromUrl } from '../utils/tenant';
 import { apiClient } from '../api/client';
+import ActionMenu from '../components/ActionMenu';
 
 interface FinanceSummary {
     class_name: string;
@@ -26,9 +28,12 @@ interface StudentFeeDetail {
     fees: FeeRecord[];
 }
 
+type SortKey = 'term' | 'amount_due' | 'amount_paid' | 'status';
+type SortDir = 'asc' | 'desc';
+
 export default function FinanceView() {
     const user = useAuthStore((state) => state.user);
-    const clientId = user?.client_id || 'Prahitha Edu';
+    const clientId = user?.client_id || getTenantFromUrl() || 'Prahitha Edu';
 
     const [summaryData, setSummaryData] = useState<FinanceSummary[]>([]);
     const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -39,7 +44,75 @@ export default function FinanceView() {
     const [editingFee, setEditingFee] = useState<number | null>(null);
     const [editAmount, setEditAmount] = useState<string>('');
 
-    // Fetch summary (class-level cards)
+    // Upload state
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState<{ type: string; message: string }>({ type: '', message: '' });
+
+    // Edit modal state
+    const [editModalFee, setEditModalFee] = useState<FeeRecord | null>(null);
+    const [editForm, setEditForm] = useState({ term: '', amount_due: '', amount_paid: '' });
+    const [saving, setSaving] = useState(false);
+
+    // Sort state
+    const [sortKey, setSortKey] = useState<SortKey>('term');
+    const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+    const isAdmin = user?.role === 'college_admin' || user?.role === 'system_admin';
+
+    const toggleSort = (key: SortKey) => {
+        if (sortKey === key) {
+            setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortKey(key);
+            setSortDir('asc');
+        }
+    };
+
+    const SortIcon = ({ col }: { col: SortKey }) => {
+        if (sortKey !== col) return <ArrowUpDown size={14} className="text-gray-300" />;
+        return sortDir === 'asc' ? <ArrowUp size={14} className="text-indigo-600" /> : <ArrowDown size={14} className="text-indigo-600" />;
+    };
+
+    const sortFees = (fees: FeeRecord[]): FeeRecord[] => {
+        return [...fees].sort((a, b) => {
+            let cmp = 0;
+            switch (sortKey) {
+                case 'term': cmp = a.term.localeCompare(b.term); break;
+                case 'amount_due': cmp = a.amount_due - b.amount_due; break;
+                case 'amount_paid': cmp = a.amount_paid - b.amount_paid; break;
+                case 'status': cmp = a.status.localeCompare(b.status); break;
+            }
+            return sortDir === 'desc' ? -cmp : cmp;
+        });
+    };
+
+    const handleFeeUpload = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!uploadFile) return;
+
+        setUploading(true);
+        setUploadStatus({ type: '', message: '' });
+
+        const formData = new FormData();
+        formData.append('file', uploadFile);
+        formData.append('client_id', clientId);
+
+        try {
+            const response = await apiClient.post('/finance/upload/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            setUploadStatus({ type: 'success', message: response.data.message || 'Fee records imported successfully!' });
+            setUploadFile(null);
+            apiClient.get(`/finance/summary?client_id=${encodeURIComponent(clientId)}`)
+                .then(res => setSummaryData(res.data));
+        } catch (error: any) {
+            setUploadStatus({ type: 'error', message: error.response?.data?.detail || 'Failed to upload CSV.' });
+        } finally {
+            setUploading(false);
+        }
+    };
+
     useEffect(() => {
         setLoading(true);
         apiClient.get(`/finance/summary?client_id=${encodeURIComponent(clientId)}`)
@@ -47,7 +120,6 @@ export default function FinanceView() {
             .catch(() => setLoading(false));
     }, [clientId]);
 
-    // Fetch student details when a class is selected
     const openClassDetails = async (className: string) => {
         setSelectedClass(className);
         setDetailLoading(true);
@@ -61,21 +133,68 @@ export default function FinanceView() {
         }
     };
 
+    const refreshData = async () => {
+        if (selectedClass) {
+            const res = await apiClient.get(`/finance/class/${encodeURIComponent(selectedClass)}?client_id=${encodeURIComponent(clientId)}`);
+            setStudents(res.data);
+        }
+        const summaryRes = await apiClient.get(`/finance/summary?client_id=${encodeURIComponent(clientId)}`);
+        setSummaryData(summaryRes.data);
+    };
+
     const handlePayFee = async (feeId: number, amount: number) => {
         if (amount <= 0 || isNaN(amount)) return;
         try {
-            await apiClient.post(`/finance/pay/${feeId}`, {
-                client_id: clientId,
-                amount_paid: amount
-            });
+            await apiClient.post(`/finance/pay/${feeId}`, { client_id: clientId, amount_paid: amount });
             setEditingFee(null);
             setEditAmount('');
-            // Refresh current class and summary
-            if (selectedClass) openClassDetails(selectedClass);
-            apiClient.get(`/finance/summary?client_id=${encodeURIComponent(clientId)}`)
-                .then(res => setSummaryData(res.data));
+            await refreshData();
         } catch (err) {
             console.error("Error updating fee", err);
+        }
+    };
+
+    const handleDeleteFee = async (feeId: number) => {
+        console.log('[DELETE] Deleting fee record:', feeId);
+        // Optimistic: remove from UI immediately
+        setStudents(prev => prev.map(s => ({
+            ...s,
+            fees: s.fees.filter(f => f.id !== feeId)
+        })).filter(s => s.fees.length > 0));
+        try {
+            await apiClient.delete(`/finance/record/${feeId}?client_id=${encodeURIComponent(clientId)}`);
+            await refreshData();
+        } catch {
+            alert('Failed to delete fee record.');
+            await refreshData(); // revert on error
+        }
+    };
+
+    const openEditModal = (fee: FeeRecord) => {
+        setEditModalFee(fee);
+        setEditForm({
+            term: fee.term,
+            amount_due: String(fee.amount_due),
+            amount_paid: String(fee.amount_paid)
+        });
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editModalFee) return;
+        setSaving(true);
+        try {
+            await apiClient.put(`/finance/record/${editModalFee.id}`, {
+                client_id: clientId,
+                term: editForm.term,
+                amount_due: parseFloat(editForm.amount_due),
+                amount_paid: parseFloat(editForm.amount_paid)
+            });
+            setEditModalFee(null);
+            await refreshData();
+        } catch {
+            alert('Failed to update fee record.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -111,6 +230,40 @@ export default function FinanceView() {
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900 border-b-4 border-indigo-600 pb-2 inline-block">Finance Management</h1>
                     <p className="mt-2 text-gray-600 text-lg">Fee collection overview by degree / year.</p>
                 </div>
+
+                {isAdmin && (
+                    <div className="mb-8 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-4">
+                            <FileSpreadsheet size={20} className="text-indigo-600" />
+                            Bulk Upload Fee Records
+                        </h3>
+                        <form onSubmit={handleFeeUpload} className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+                            <div className="flex-1 w-full">
+                                <label className="block text-sm font-medium text-gray-600 mb-1">CSV File (admission_id, term, amount_due, amount_paid, status, due_date)</label>
+                                <input
+                                    type="file"
+                                    accept=".csv,.xlsx,.xls"
+                                    onChange={(e) => { setUploadFile(e.target.files?.[0] || null); setUploadStatus({ type: '', message: '' }); }}
+                                    className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={!uploadFile || uploading}
+                                className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                            >
+                                <Upload size={16} />
+                                {uploading ? 'Uploading...' : 'Upload'}
+                            </button>
+                        </form>
+                        {uploadStatus.message && (
+                            <div className={`mt-3 flex items-center gap-2 text-sm font-medium ${uploadStatus.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                                {uploadStatus.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                                {uploadStatus.message}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {summaryData.map((data) => {
@@ -201,12 +354,29 @@ export default function FinanceView() {
                                     </div>
                                 </div>
 
+                                {/* Sortable column headers */}
+                                <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                                    <button onClick={() => toggleSort('term')} className="flex items-center gap-1 hover:text-indigo-600 transition text-left">
+                                        Term <SortIcon col="term" />
+                                    </button>
+                                    <button onClick={() => toggleSort('amount_due')} className="flex items-center gap-1 hover:text-indigo-600 transition text-left">
+                                        Amount Due <SortIcon col="amount_due" />
+                                    </button>
+                                    <button onClick={() => toggleSort('amount_paid')} className="flex items-center gap-1 hover:text-indigo-600 transition text-left">
+                                        Amount Paid <SortIcon col="amount_paid" />
+                                    </button>
+                                    <button onClick={() => toggleSort('status')} className="flex items-center gap-1 hover:text-indigo-600 transition text-left">
+                                        Status <SortIcon col="status" />
+                                    </button>
+                                    {isAdmin && <span className="text-center">Actions</span>}
+                                </div>
+
                                 <ul className="divide-y divide-gray-100 p-2">
-                                    {student.fees.sort((a, b) => a.term.localeCompare(b.term)).map((fee) => (
+                                    {sortFees(student.fees).map((fee) => (
                                         <li key={fee.id} className="flex flex-col md:flex-row items-center justify-between p-4 bg-white hover:bg-gray-50 transition-colors rounded-xl">
                                             <div className="flex items-center gap-4 flex-1">
-                                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-lg">
-                                                    {fee.term.split(' ')[1]}
+                                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-lg min-w-[48px] text-center">
+                                                    {fee.term.split(' ')[1] || fee.term.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <h4 className="text-lg font-medium text-gray-900 uppercase tracking-wide">{fee.term}</h4>
@@ -216,10 +386,10 @@ export default function FinanceView() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center justify-end gap-6 flex-1 w-full mt-4 md:mt-0">
+                                            <div className="flex items-center justify-end gap-4 flex-1 w-full mt-4 md:mt-0">
                                                 <StatusBadge status={fee.status} />
 
-                                                {user?.role === 'admin' && fee.status !== 'Paid' && (
+                                                {isAdmin && fee.status !== 'Paid' && (
                                                     <div className="flex items-center gap-2">
                                                         {editingFee === fee.id ? (
                                                             <>
@@ -253,6 +423,13 @@ export default function FinanceView() {
                                                         )}
                                                     </div>
                                                 )}
+
+                                                {isAdmin && (
+                                                    <ActionMenu
+                                                        onEdit={() => openEditModal(fee)}
+                                                        onDelete={() => handleDeleteFee(fee.id)}
+                                                    />
+                                                )}
                                             </div>
                                         </li>
                                     ))}
@@ -265,6 +442,64 @@ export default function FinanceView() {
                             No students found for this class.
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Edit Fee Modal */}
+            {editModalFee && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
+                            <h3 className="text-lg font-bold text-gray-900">Edit Fee Record</h3>
+                            <button onClick={() => setEditModalFee(null)} className="p-1 hover:bg-gray-200 rounded-lg transition">
+                                <X size={20} className="text-gray-500" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                                <input
+                                    type="text"
+                                    value={editForm.term}
+                                    onChange={(e) => setEditForm({ ...editForm, term: e.target.value })}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Amount Due (₹)</label>
+                                <input
+                                    type="number"
+                                    value={editForm.amount_due}
+                                    onChange={(e) => setEditForm({ ...editForm, amount_due: e.target.value })}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Amount Paid (₹)</label>
+                                <input
+                                    type="number"
+                                    value={editForm.amount_paid}
+                                    onChange={(e) => setEditForm({ ...editForm, amount_paid: e.target.value })}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50">
+                            <button
+                                onClick={() => setEditModalFee(null)}
+                                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveEdit}
+                                disabled={saving}
+                                className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50"
+                            >
+                                {saving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

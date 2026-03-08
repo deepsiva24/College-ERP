@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
 import { ImageIcon } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import { getTenantFromUrl } from '../utils/tenant';
 
 interface GalleryItem {
     id: number;
@@ -13,7 +14,7 @@ interface GalleryItem {
 
 export default function GalleryView() {
     const user = useAuthStore((state) => state.user);
-    const clientId = user?.client_id || 'Prahitha Edu';
+    const clientId = user?.client_id || getTenantFromUrl() || 'Prahitha Edu';
     const [items, setItems] = useState<GalleryItem[]>([]);
     const [loading, setLoading] = useState(true);
 

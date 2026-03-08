@@ -5,9 +5,10 @@ import enum
 from database import Base
 
 class RoleEnum(str, enum.Enum):
-    admin = "admin"
-    teacher = "teacher"
     student = "student"
+    teacher = "teacher"
+    college_admin = "college_admin"
+    system_admin = "system_admin"
 
 class User(Base):
     __tablename__ = "users"

@@ -14,10 +14,11 @@ interface StudentBasic {
     first_name: string;
     last_name: string;
 }
+import { getTenantFromUrl } from '../utils/tenant';
 
 export default function RecordAttendanceView() {
     const { user } = useAuthStore();
-    const clientId = user?.client_id || 'Prahitha Edu';
+    const clientId = user?.client_id || getTenantFromUrl() || 'Prahitha Edu';
     const token = localStorage.getItem('token');
     const [activeTab, setActiveTab] = useState<'flashcard' | 'bulk'>('flashcard');
 

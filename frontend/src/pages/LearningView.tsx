@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { BookOpen, FileText, Video, Link as LinkIcon, Download, UploadCloud, ChevronDown, ChevronUp } from 'lucide-react';
+import { getTenantFromUrl } from '../utils/tenant';
 import { apiClient } from '../api/client';
 
 interface Material {
@@ -25,7 +26,7 @@ interface ClassCourseGroup {
 
 export default function LearningView() {
     const user = useAuthStore((state) => state.user);
-    const clientId = user?.client_id || 'Prahitha Edu';
+    const clientId = user?.client_id || getTenantFromUrl() || 'Prahitha Edu';
     const [groupedCourses, setGroupedCourses] = useState<ClassCourseGroup[]>([]);
     const [expandedClass, setExpandedClass] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -102,7 +103,7 @@ export default function LearningView() {
                 </div>
 
                 {/* Admin Bulk Upload Section */}
-                {user?.role === 'admin' && (
+                {(user?.role === 'college_admin' || user?.role === 'system_admin') && (
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 min-w-[300px]">
                         <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
                             <UploadCloud size={18} className="text-indigo-600" />

@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { AuthService } from '../services/AuthService';
 import { apiClient } from '../api/client';
 import { Mail, Lock, LogIn } from 'lucide-react';
+import { getTenantFromUrl } from '../utils/tenant';
 
 export default function LoginView() {
     const [email, setEmail] = useState('');
@@ -15,9 +16,14 @@ export default function LoginView() {
     const setAuth = useAuthStore((state) => state.setAuth);
 
     useEffect(() => {
-        apiClient.get('/config').then(res => {
-            setClientId(res.data.default_client_id || '');
-        }).catch(() => { });
+        const tenantFromUrl = getTenantFromUrl();
+        if (tenantFromUrl) {
+            setClientId(tenantFromUrl);
+        } else {
+            apiClient.get('/config').then(res => {
+                setClientId(res.data.default_client_id || '');
+            }).catch(() => { });
+        }
     }, []);
 
     const handleLogin = async (e: React.FormEvent) => {

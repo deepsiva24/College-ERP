@@ -5,9 +5,10 @@ from enum import Enum
 from config import settings
 
 class RoleEnum(str, Enum):
-    admin = "admin"
-    teacher = "teacher"
     student = "student"
+    teacher = "teacher"
+    college_admin = "college_admin"
+    system_admin = "system_admin"
 
 class ProfileBase(BaseModel):
     first_name: str
@@ -122,6 +123,7 @@ class CoursePerformanceSummary(BaseModel):
         from_attributes = True
 
 class StudentPerformanceDetail(BaseModel):
+    id: int
     user_id: int
     admission_id: Optional[str] = None
     first_name: str

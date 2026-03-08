@@ -5,8 +5,13 @@ from database import get_tenant_db_ctx
 import models
 from auth import hash_password
 
-# Constants for Mock Data
-DEFAULT_PASSWORD = "password"
+# Role-specific default passwords
+ROLE_PASSWORDS = {
+    "system_admin": "sysadmin@123",
+    "college_admin": "collegeadmin@123",
+    "teacher": "teacher@123",
+    "student": "student@123",
+}
 
 SUBJECT_PREFIXES = ["Computer Science", "Mathematics", "Physics", "Literature", "History", "Biology", "Chemistry", "Philosophy"]
 COURSE_LEVELS = ["101", "201", "301", "401"]
@@ -26,30 +31,47 @@ GALLERY_IMAGES = [
     {"title": "Sports Field", "url": "https://images.unsplash.com/photo-1518605368461-1e1e11432da4?auto=format&fit=crop&q=80", "desc": "Annual sports meet on the main field"},
 ]
 
-def generate_mock_password(base: str) -> str:
-    return hash_password(base)
+def generate_email_domain(client_id: str) -> str:
+    """Generate email domain from client_id: e.g. 'Prahitha Educational' -> 'prahithaeducational.co.in'"""
+    return f"{client_id.lower().replace(' ', '')}.co.in"
 
 
 def create_users(db: Session, client_id: str, num_teachers: int, num_students: int):
-    print(f"[{client_id}] Creating Administrator...")
-    admin_email = f"admin@{client_id.lower().replace(' ', '')}.edu"
-    admin = models.User(
-        email=admin_email,
-        hashed_password=generate_mock_password(DEFAULT_PASSWORD),
-        role=models.RoleEnum.admin
-    )
-    db.add(admin)
-    db.flush() 
-    db.add(models.Profile(first_name="Admin", last_name="User", user_id=admin.id))
+    domain = generate_email_domain(client_id)
 
+    # 1. System Admin
+    print(f"[{client_id}] Creating System Administrator...")
+    sysadmin_email = f"sysadmin@{domain}"
+    sysadmin = models.User(
+        email=sysadmin_email,
+        hashed_password=hash_password(ROLE_PASSWORDS["system_admin"]),
+        role=models.RoleEnum.system_admin
+    )
+    db.add(sysadmin)
+    db.flush()
+    db.add(models.Profile(first_name="System", last_name="Admin", user_id=sysadmin.id))
+
+    # 2. College Admin
+    print(f"[{client_id}] Creating College Administrator...")
+    college_admin_email = f"admin@{domain}"
+    college_admin = models.User(
+        email=college_admin_email,
+        hashed_password=hash_password(ROLE_PASSWORDS["college_admin"]),
+        role=models.RoleEnum.college_admin
+    )
+    db.add(college_admin)
+    db.flush()
+    db.add(models.Profile(first_name="College", last_name="Admin", user_id=college_admin.id))
+
+    # 3. Teachers
     teachers = []
     print(f"[{client_id}] Creating {num_teachers} Teachers...")
     for i in range(num_teachers):
         fname = random.choice(FIRST_NAMES)
         lname = random.choice(LAST_NAMES)
         teacher = models.User(
-            email=f"teacher{i+1}.{fname.lower()}@{client_id.lower().replace(' ', '')}.edu",
-            hashed_password=generate_mock_password(DEFAULT_PASSWORD),
+            email=f"teacher{i+1}.{fname.lower()}@{domain}",
+            hashed_password=hash_password(ROLE_PASSWORDS["teacher"]),
             role=models.RoleEnum.teacher
         )
         db.add(teacher)
@@ -57,14 +79,15 @@ def create_users(db: Session, client_id: str, num_teachers: int, num_students: i
         db.add(models.Profile(first_name=fname, last_name=lname, user_id=teacher.id))
         teachers.append(teacher)
 
+    # 4. Students
     students = []
     print(f"[{client_id}] Creating {num_students} Students...")
     for i in range(num_students):
         fname = random.choice(FIRST_NAMES)
         lname = random.choice(LAST_NAMES)
         student = models.User(
-            email=f"student{i+1}.{fname.lower()}@{client_id.lower().replace(' ', '')}.edu",
-            hashed_password=generate_mock_password(DEFAULT_PASSWORD),
+            email=f"student{i+1}.{fname.lower()}@{domain}",
+            hashed_password=hash_password(ROLE_PASSWORDS["student"]),
             role=models.RoleEnum.student
         )
         db.add(student)
@@ -85,7 +108,7 @@ def create_users(db: Session, client_id: str, num_teachers: int, num_students: i
         students.append(student)
 
     db.commit()
-    return admin_email, teachers, students
+    return sysadmin_email, college_admin_email, teachers, students
 
 def create_courses_and_materials(db: Session, client_id: str, teachers: list, num_courses: int):
     print(f"[{client_id}] Creating {num_courses} Courses & Materials...")
@@ -197,12 +220,19 @@ def seed_database():
             models.Base.metadata.create_all(bind=db.get_bind())
             print(f"Database tables recreated for {tenant}.")
             
-            admin_email, teachers, students = create_users(db, client_id=tenant, num_teachers=5, num_students=50)
+            domain = generate_email_domain(tenant)
+            sysadmin_email, college_admin_email, teachers, students = create_users(db, client_id=tenant, num_teachers=5, num_students=50)
             courses = create_courses_and_materials(db, client_id=tenant, teachers=teachers, num_courses=15)
             create_enrollments_attendance_performance(db, client_id=tenant, students=students, courses=courses, max_courses_per_student=4)
             create_gallery(db, client_id=tenant)
             create_fees(db, client_id=tenant, students=students)
-            print(f"Tenant {tenant} seeded! Test admin login: {admin_email} / {DEFAULT_PASSWORD}")
+            
+            print(f"\n--- Tenant: {tenant} seeded! ---")
+            print(f"  System Admin : {sysadmin_email} / {ROLE_PASSWORDS['system_admin']}")
+            print(f"  College Admin: {college_admin_email} / {ROLE_PASSWORDS['college_admin']}")
+            print(f"  Teacher      : teacher1.*@{domain} / {ROLE_PASSWORDS['teacher']}")
+            print(f"  Student      : student1.*@{domain} / {ROLE_PASSWORDS['student']}")
+            print()
             
     print("Done. Database successfully populated with synthetic multi-tenant data!")
 

@@ -3,15 +3,15 @@ import { Home, CalendarCheck, TrendingUp, BookOpen, Image, LogOut, UserPlus, Ind
 import { useAuthStore } from '../store/useAuthStore';
 
 const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['admin', 'teacher', 'student'] },
-    { name: 'Record Attendance', href: '/record-attendance', icon: CalendarCheck, roles: ['admin', 'teacher'] },
+    { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['system_admin', 'college_admin', 'teacher', 'student'] },
+    { name: 'Record Attendance', href: '/record-attendance', icon: CalendarCheck, roles: ['system_admin', 'college_admin', 'teacher'] },
     { name: 'My Attendance', href: '/attendance', icon: CalendarCheck, roles: ['student'] },
-    { name: 'Class Attendance', href: '/attendance', icon: CalendarCheck, roles: ['admin', 'teacher'] },
-    { name: 'Performance', href: '/performance', icon: TrendingUp, roles: ['admin', 'teacher', 'student'] },
-    { name: 'Learning Management', href: '/learning', icon: BookOpen, roles: ['admin', 'teacher', 'student'] },
-    { name: 'Gallery', href: '/gallery', icon: Image, roles: ['admin', 'teacher', 'student'] },
-    { name: 'Add Students', href: '/add-student', icon: UserPlus, roles: ['admin', 'teacher'] },
-    { name: 'Finance', href: '/finance', icon: IndianRupee, roles: ['admin'] },
+    { name: 'Class Attendance', href: '/attendance', icon: CalendarCheck, roles: ['system_admin', 'college_admin', 'teacher'] },
+    { name: 'Performance', href: '/performance', icon: TrendingUp, roles: ['system_admin', 'college_admin', 'teacher', 'student'] },
+    { name: 'Learning Management', href: '/learning', icon: BookOpen, roles: ['system_admin', 'college_admin', 'teacher', 'student'] },
+    { name: 'Gallery', href: '/gallery', icon: Image, roles: ['system_admin', 'college_admin', 'teacher', 'student'] },
+    { name: 'Add Students', href: '/add-student', icon: UserPlus, roles: ['system_admin', 'college_admin', 'teacher'] },
+    { name: 'Finance', href: '/finance', icon: IndianRupee, roles: ['system_admin', 'college_admin'] },
 ];
 
 export default function Sidebar() {

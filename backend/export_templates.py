@@ -66,7 +66,50 @@ try:
         writer = csv.writer(f)
         writer.writerow(["title", "description"])
         writer.writerows(courses)
+
+    # 4. Fees Template
+    print("Exporting Fees...")
+    cursor.execute('''
+    SELECT
+        p.admission_id,
+        f.term,
+        f.amount_due,
+        f.amount_paid,
+        f.status,
+        f.due_date
+    FROM fee_records f
+    JOIN profiles p ON f.student_id = p.user_id
+    ''')
+    fees = cursor.fetchall()
+    headers = [description[0] for description in cursor.description]
+
+    with open(os.path.join(output_dir, 'fees.csv'), 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+        writer.writerows(fees)
+
+    # 5. Performance Template
+    print("Exporting Performance...")
+    cursor.execute('''
+    SELECT
+        p.admission_id,
+        c.title as course_title,
+        perf.assessment_name,
+        perf.score,
+        perf.max_score
+    FROM performance perf
+    JOIN profiles p ON perf.student_id = p.user_id
+    JOIN courses c ON perf.course_id = c.id
+    ''')
+    performance = cursor.fetchall()
+    headers = [description[0] for description in cursor.description]
+
+    with open(os.path.join(output_dir, 'performance.csv'), 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+        writer.writerows(performance)
         
     print("Templates successfully generated at:", output_dir)
 finally:
     conn.close()
+

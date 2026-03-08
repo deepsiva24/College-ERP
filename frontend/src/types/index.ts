@@ -1,4 +1,4 @@
-export type RoleEnum = 'admin' | 'teacher' | 'student';
+export type RoleEnum = 'student' | 'teacher' | 'college_admin' | 'system_admin';
 
 export interface Profile {
     id: number;

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { CheckCircle2, XCircle, Clock, ArrowLeft, BarChart3, Users, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiClient } from '../api/client';
+import { getTenantFromUrl } from '../utils/tenant';
 
 // Interfaces for our types based on Backend schemas
 interface Attendance {
@@ -25,7 +26,7 @@ interface AttendanceSummaryRecord {
 
 export default function AttendanceView() {
     const user = useAuthStore((state) => state.user);
-    const clientId = user?.client_id || 'Prahitha Edu';
+    const clientId = user?.client_id || getTenantFromUrl() || 'Prahitha Edu';
     const [studentRecords, setStudentRecords] = useState<Attendance[]>([]);
     const [summaryRecords, setSummaryRecords] = useState<AttendanceSummaryRecord[]>([]);
     const [loading, setLoading] = useState(true);
@@ -38,7 +39,7 @@ export default function AttendanceView() {
     const [studentDetailLoading, setStudentDetailLoading] = useState(false);
     const [currentMonthDate, setCurrentMonthDate] = useState<Date>(new Date());
 
-    const isAdminOrTeacher = user?.role === 'admin' || user?.role === 'teacher';
+    const isAdminOrTeacher = user?.role === 'college_admin' || user?.role === 'system_admin' || user?.role === 'teacher';
 
     useEffect(() => {
         if (!user) return;

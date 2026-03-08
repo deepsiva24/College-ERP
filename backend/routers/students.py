@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from pydantic import BaseModel
 import csv, datetime
 from io import StringIO
 from sqlalchemy.orm import Session
@@ -13,6 +14,29 @@ router = APIRouter(tags=["Students"])
 @router.get("/users/", response_model=list[schemas.User])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_tenant_db)):
     return db.query(models.User).offset(skip).limit(limit).all()
+
+
+@router.get("/students/list/")
+def list_students(db: Session = Depends(get_tenant_db)):
+    students = db.query(
+        models.User.id,
+        models.User.email,
+        models.Profile.first_name,
+        models.Profile.last_name,
+        models.Profile.admission_id,
+        models.Profile.class_name,
+        models.Profile.section
+    ).join(
+        models.Profile, models.User.id == models.Profile.user_id
+    ).filter(
+        models.User.role == models.RoleEnum.student
+    ).all()
+    return [{
+        "id": s.id, "email": s.email,
+        "first_name": s.first_name, "last_name": s.last_name,
+        "admission_id": s.admission_id, "class_name": s.class_name,
+        "section": s.section
+    } for s in students]
 
 
 @router.post("/students/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
@@ -96,3 +120,72 @@ async def upload_students_csv(file: UploadFile = File(...), client_id: str = For
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=400, detail=f"Error processing CSV file: {str(e)}")
+
+
+class BulkDeleteRequest(BaseModel):
+    client_id: str
+    ids: list[int]
+
+
+@router.post("/students/bulk-delete/")
+def bulk_delete_students(payload: BulkDeleteRequest):
+    with get_tenant_db_ctx(payload.client_id) as db:
+        # Delete cascading related records first
+        db.query(models.FeeRecord).filter(models.FeeRecord.student_id.in_(payload.ids)).delete(synchronize_session=False)
+        db.query(models.Performance).filter(models.Performance.student_id.in_(payload.ids)).delete(synchronize_session=False)
+        db.query(models.Attendance).filter(models.Attendance.student_id.in_(payload.ids)).delete(synchronize_session=False)
+        db.query(models.Enrollment).filter(models.Enrollment.student_id.in_(payload.ids)).delete(synchronize_session=False)
+        db.query(models.Profile).filter(models.Profile.user_id.in_(payload.ids)).delete(synchronize_session=False)
+        deleted = db.query(models.User).filter(models.User.id.in_(payload.ids)).delete(synchronize_session=False)
+        db.commit()
+        return {"message": f"Successfully deleted {deleted} student(s) and all related records"}
+
+
+class StudentUpdate(BaseModel):
+    client_id: str
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    admission_id: str | None = None
+    class_name: str | None = None
+    section: str | None = None
+
+
+@router.put("/students/{user_id}")
+def update_student(user_id: int, payload: StudentUpdate):
+    with get_tenant_db_ctx(payload.client_id) as db:
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Student not found")
+        profile = db.query(models.Profile).filter(models.Profile.user_id == user_id).first()
+        if not profile:
+            raise HTTPException(status_code=404, detail="Student profile not found")
+        if payload.email is not None:
+            user.email = payload.email
+        if payload.first_name is not None:
+            profile.first_name = payload.first_name
+        if payload.last_name is not None:
+            profile.last_name = payload.last_name
+        if payload.admission_id is not None:
+            profile.admission_id = payload.admission_id
+        if payload.class_name is not None:
+            profile.class_name = payload.class_name
+        if payload.section is not None:
+            profile.section = payload.section
+        db.commit()
+        return {"message": "Student updated successfully"}
+
+
+@router.delete("/students/{user_id}")
+def delete_single_student(user_id: int, client_id: str = ""):
+    with get_tenant_db_ctx(client_id) as db:
+        db.query(models.FeeRecord).filter(models.FeeRecord.student_id == user_id).delete(synchronize_session=False)
+        db.query(models.Performance).filter(models.Performance.student_id == user_id).delete(synchronize_session=False)
+        db.query(models.Attendance).filter(models.Attendance.student_id == user_id).delete(synchronize_session=False)
+        db.query(models.Enrollment).filter(models.Enrollment.student_id == user_id).delete(synchronize_session=False)
+        db.query(models.Profile).filter(models.Profile.user_id == user_id).delete(synchronize_session=False)
+        deleted = db.query(models.User).filter(models.User.id == user_id).delete(synchronize_session=False)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Student not found")
+        db.commit()
+        return {"message": "Student and all related records deleted"}

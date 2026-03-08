@@ -1,17 +1,88 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from pydantic import BaseModel
 from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+import csv
+from io import StringIO
 import models, schemas
-from database import get_tenant_db
+from database import get_tenant_db, get_tenant_db_ctx
+from config import settings
 
 router = APIRouter(tags=["Performance"])
+
+
+@router.post("/performance/upload/")
+async def upload_performance_csv(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
+    with get_tenant_db_ctx(client_id) as db:
+        try:
+            content = await file.read()
+            csv_reader = csv.DictReader(StringIO(content.decode('utf-8')))
+            added_count = 0
+            skipped_count = 0
+
+            # Build a course title → id lookup cache
+            courses = db.query(models.Course).all()
+            course_lookup = {c.title.strip().lower(): c.id for c in courses}
+
+            for row in csv_reader:
+                admission_id = row.get("admission_id", "").strip()
+                if not admission_id:
+                    continue
+
+                # Resolve admission_id → user_id
+                profile = db.query(models.Profile).filter(
+                    models.Profile.admission_id == admission_id
+                ).first()
+                if not profile:
+                    skipped_count += 1
+                    continue
+
+                # Resolve course_title → course_id
+                course_title = row.get("course_title", "").strip()
+                course_id = course_lookup.get(course_title.lower())
+                if not course_id:
+                    skipped_count += 1
+                    continue
+
+                assessment_name = row.get("assessment_name", "").strip()
+                if not assessment_name:
+                    continue
+
+                # Skip duplicates (same student + course + assessment)
+                existing = db.query(models.Performance).filter(
+                    models.Performance.student_id == profile.user_id,
+                    models.Performance.course_id == course_id,
+                    models.Performance.assessment_name == assessment_name
+                ).first()
+                if existing:
+                    skipped_count += 1
+                    continue
+
+                score = float(row.get("score", 0))
+                max_score = float(row.get("max_score", 100))
+
+                perf = models.Performance(
+                    student_id=profile.user_id,
+                    course_id=course_id,
+                    assessment_name=assessment_name,
+                    score=score,
+                    max_score=max_score
+                )
+                db.add(perf)
+                added_count += 1
+
+            db.commit()
+            return {"message": f"Successfully imported {added_count} performance records ({skipped_count} skipped)"}
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=400, detail=f"Error processing CSV file: {str(e)}")
 
 
 @router.get("/students/{user_id}/performance", response_model=List[schemas.Performance])
 def get_student_performance(user_id: int, db: Session = Depends(get_tenant_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
-    if user and user.role == models.RoleEnum.admin:
+    if user and user.role in (models.RoleEnum.college_admin, models.RoleEnum.system_admin):
         return db.query(models.Performance).limit(100).all()
     return db.query(models.Performance).filter(models.Performance.student_id == user_id).all()
 
@@ -51,6 +122,7 @@ def get_performance_summary(db: Session = Depends(get_tenant_db)):
 @router.get("/performance/details", response_model=List[schemas.StudentPerformanceDetail])
 def get_performance_details(course_id: int, class_name: str, db: Session = Depends(get_tenant_db)):
     records = db.query(
+        models.Performance.id.label('id'),
         models.User.id.label('user_id'),
         models.Profile.admission_id, models.Profile.first_name, models.Profile.last_name,
         models.Performance.assessment_name, models.Performance.score, models.Performance.max_score
@@ -64,7 +136,57 @@ def get_performance_details(course_id: int, class_name: str, db: Session = Depen
     ).all()
 
     return [{
-        "user_id": r.user_id, "admission_id": r.admission_id,
+        "id": r.id, "user_id": r.user_id, "admission_id": r.admission_id,
         "first_name": r.first_name, "last_name": r.last_name,
         "assessment_name": r.assessment_name, "score": r.score, "max_score": r.max_score
     } for r in records]
+
+
+class BulkDeleteRequest(BaseModel):
+    client_id: str
+    ids: list[int]
+
+
+@router.post("/performance/bulk-delete/")
+def bulk_delete_performance_records(payload: BulkDeleteRequest):
+    with get_tenant_db_ctx(payload.client_id) as db:
+        deleted = db.query(models.Performance).filter(
+            models.Performance.id.in_(payload.ids)
+        ).delete(synchronize_session=False)
+        db.commit()
+        return {"message": f"Successfully deleted {deleted} performance record(s)"}
+
+
+class PerformanceRecordUpdate(BaseModel):
+    client_id: str
+    assessment_name: str | None = None
+    score: float | None = None
+    max_score: float | None = None
+
+
+@router.put("/performance/record/{record_id}")
+def update_performance_record(record_id: int, payload: PerformanceRecordUpdate):
+    with get_tenant_db_ctx(payload.client_id) as db:
+        perf = db.query(models.Performance).filter(models.Performance.id == record_id).first()
+        if not perf:
+            raise HTTPException(status_code=404, detail="Performance record not found")
+        if payload.assessment_name is not None:
+            perf.assessment_name = payload.assessment_name
+        if payload.score is not None:
+            perf.score = payload.score
+        if payload.max_score is not None:
+            perf.max_score = payload.max_score
+        db.commit()
+        db.refresh(perf)
+        return perf
+
+
+@router.delete("/performance/record/{record_id}")
+def delete_single_performance_record(record_id: int, client_id: str = ""):
+    with get_tenant_db_ctx(client_id) as db:
+        perf = db.query(models.Performance).filter(models.Performance.id == record_id).first()
+        if not perf:
+            raise HTTPException(status_code=404, detail="Performance record not found")
+        db.delete(perf)
+        db.commit()
+        return {"message": "Performance record deleted"}
