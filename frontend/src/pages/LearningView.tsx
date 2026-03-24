@@ -39,7 +39,7 @@ export default function LearningView() {
     const fetchLearningData = async () => {
         try {
             setLoading(true);
-            const res = await apiClient.get(`/learning/classes?client_id=${clientId}`);
+            const res = await apiClient.post('/learning/classes', { client_id: clientId });
             setGroupedCourses(res.data);
             if (res.data.length > 0) setExpandedClass(res.data[0].class_name);
         } catch (err) {

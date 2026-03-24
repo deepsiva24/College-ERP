@@ -7,8 +7,11 @@ export interface DashboardData {
 }
 
 export class DashboardService {
-    static async getDashboardData(userId: number): Promise<DashboardData> {
-        const response = await apiClient.get<DashboardData>(`/users/${userId}/dashboard`);
+    static async getDashboardData(userId: number, clientId?: string): Promise<DashboardData> {
+        const response = await apiClient.post<DashboardData>('/users/dashboard', {
+            user_id: userId,
+            client_id: clientId
+        });
         return response.data;
     }
 }

@@ -45,7 +45,7 @@ export default function AttendanceView() {
         if (!user) return;
 
         if (isAdminOrTeacher) {
-            apiClient.get(`/attendance/summary?client_id=${clientId}`)
+            apiClient.post('/attendance/summary', { client_id: clientId })
                 .then(response => {
                     setSummaryRecords(response.data);
                     setLoading(false);
@@ -55,7 +55,7 @@ export default function AttendanceView() {
                     setLoading(false);
                 });
         } else {
-            apiClient.get(`/students/${user.id}/attendance?client_id=${clientId}`)
+            apiClient.post('/students/attendance', { client_id: clientId, user_id: user.id })
                 .then(response => {
                     setStudentRecords(response.data);
                     setLoading(false);
@@ -118,7 +118,7 @@ export default function AttendanceView() {
         setSelectedStudent(student);
         setStudentDetailLoading(true);
         setCurrentMonthDate(new Date());
-        apiClient.get(`/students/${student.user_id}/attendance?client_id=${clientId}`)
+        apiClient.post('/students/attendance', { client_id: clientId, user_id: student.user_id })
             .then(response => {
                 setStudentDetailRecords(response.data);
                 setStudentDetailLoading(false);

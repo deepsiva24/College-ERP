@@ -35,6 +35,8 @@ def login_user(credentials: schemas.UserLogin):
             "client_id": credentials.client_id
         })
 
+        profile = db.query(models.Profile).filter(models.Profile.user_id == db_user.id).first()
+        
         return {
             "access_token": token,
             "token_type": "bearer",
@@ -42,4 +44,7 @@ def login_user(credentials: schemas.UserLogin):
             "email": db_user.email,
             "role": db_user.role.value if hasattr(db_user.role, 'value') else db_user.role,
             "client_id": credentials.client_id,
+            "first_name": profile.first_name if profile else "",
+            "last_name": profile.last_name if profile else "",
+            "class_name": profile.class_name if profile else "",
         }

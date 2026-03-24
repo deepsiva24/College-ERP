@@ -1,13 +1,9 @@
 // Default mapping for human-friendly subdomains to database Client IDs
 export const mapSubdomainToClientId = (subdomain: string): string => {
-    const mapping: Record<string, string> = {
-        'demo': 'Demo School',
-        'prahitha': 'Prahitha Educational',
-        'acharyaboard': 'Acharyaboard Default'
-    };
-
-    // If we have a specific mapping, use it. Otherwise, capitalize the subdomain as a fallback.
-    return mapping[subdomain.toLowerCase()] || (subdomain.charAt(0).toUpperCase() + subdomain.slice(1));
+    // The backend now securely looks up either the specific Name or this exact subdomain 
+    // in the public.clients table. We will prioritize sending the exact subdomain strings 
+    // to cleanly interface with the new `subdomain` column in our AdminClient model.
+    return subdomain.toLowerCase();
 };
 
 export const getTenantFromUrl = (): string | null => {
@@ -28,8 +24,10 @@ export const getTenantFromUrl = (): string | null => {
     if (hostname.endsWith(baseDomain) && hostname !== baseDomain) {
         // Extract subdomain part
         const subdomain = hostname.replace(`.${baseDomain}`, '');
-        if (subdomain !== 'www') {
-            return mapSubdomainToClientId(subdomain);
+        // Trim any trailing dot just in case
+        const cleanSubdomain = subdomain.replace(/\.$/, '');
+        if (cleanSubdomain !== 'www') {
+            return mapSubdomainToClientId(cleanSubdomain);
         }
     }
 

@@ -19,7 +19,7 @@ export default function GalleryView() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        apiClient.get(`/gallery?client_id=${clientId}`)
+        apiClient.post('/gallery', { client_id: clientId })
             .then(response => {
                 setItems(response.data);
                 setLoading(false);

@@ -1,0 +1,11 @@
+Forebase:
+  Domain: rosy-hope-489506-p3.web.app
+  Default: rosy-hope-489506-p3.firebaseapp.com
+  custom: acharyaboard.co.in
+  Custom: app.acharyaboard.co.in
+Godaddy:
+  DNS Record-1: "A @ 199.36.158.100" 
+  DNS Record-2: "cname * ghs.googlehosted.com"
+  DNS Record-3: "cname app ghs.googlehosted.com"
+  DNS Record-4: "cname www ghs.googlehosted.com" 
+  DNS Record-5: "txt	@	hosting-site=rosy-hope-489506-p3" 

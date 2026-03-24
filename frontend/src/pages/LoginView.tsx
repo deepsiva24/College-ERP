@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { AuthService } from '../services/AuthService';
 import { apiClient } from '../api/client';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, Smartphone, Eye, EyeOff } from 'lucide-react';
 import { getTenantFromUrl } from '../utils/tenant';
 
 export default function LoginView() {
@@ -11,6 +11,7 @@ export default function LoginView() {
     const [password, setPassword] = useState('');
     const [clientId, setClientId] = useState('');
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const setAuth = useAuthStore((state) => state.setAuth);
@@ -151,13 +152,21 @@ export default function LoginView() {
                                             <Lock size={20} className="text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                                         </div>
                                         <input
-                                            type="password"
+                                            type={showPassword ? 'text' : 'password'}
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="block w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm"
+                                            className="block w-full pl-11 pr-12 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm"
                                             placeholder="••••••••"
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-indigo-500 transition-colors"
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -203,6 +212,20 @@ export default function LoginView() {
                                 )}
                             </button>
                         </form>
+
+                        <div className="mt-8 pt-6 border-t border-gray-100">
+                            <a
+                                href="/school_erp.apk"
+                                download
+                                className="flex items-center justify-center gap-3 w-full py-3 px-4 rounded-xl border-2 border-indigo-50 text-indigo-600 font-semibold hover:bg-indigo-50 hover:border-indigo-100 transition-all duration-200"
+                            >
+                                <Smartphone size={20} />
+                                Download Android App
+                            </a>
+                            <p className="text-center text-xs text-gray-400 mt-3">
+                                Tap to download the APK directly to your mobile device
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

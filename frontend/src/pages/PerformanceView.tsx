@@ -95,7 +95,7 @@ export default function PerformanceView() {
             });
             setUploadStatus({ type: 'success', message: response.data.message || 'Performance records imported successfully!' });
             setUploadFile(null);
-            apiClient.get(`/performance/summary?client_id=${clientId}`)
+            apiClient.post('/performance/summary', { client_id: clientId })
                 .then(response => setSummaryRecords(response.data));
         } catch (error: any) {
             setUploadStatus({ type: 'error', message: error.response?.data?.detail || 'Failed to upload CSV.' });
@@ -110,7 +110,7 @@ export default function PerformanceView() {
         if (!user) return;
 
         if (isAdminOrTeacher) {
-            apiClient.get(`/performance/summary?client_id=${clientId}`)
+            apiClient.post('/performance/summary', { client_id: clientId })
                 .then(response => {
                     setSummaryRecords(response.data);
                     setLoading(false);
@@ -120,7 +120,7 @@ export default function PerformanceView() {
                     setLoading(false);
                 });
         } else {
-            apiClient.get(`/students/${user.id}/performance?client_id=${clientId}`)
+            apiClient.post('/students/performance', { client_id: clientId, user_id: user.id })
                 .then(response => {
                     setStudentPerformances(response.data);
                     setLoading(false);
@@ -137,12 +137,10 @@ export default function PerformanceView() {
         setDetailLoading(true);
         setSearchQuery('');
 
-        apiClient.get(`/performance/details`, {
-            params: {
-                course_id: course.course_id,
-                class_name: course.class_name || '',
-                client_id: clientId
-            }
+        apiClient.post('/performance/details', {
+            course_id: course.course_id,
+            class_name: course.class_name || '',
+            client_id: clientId
         })
             .then(response => {
                 setDetailRecords(response.data);
@@ -156,12 +154,12 @@ export default function PerformanceView() {
 
     const refreshDetailData = async () => {
         if (selectedCourse) {
-            const res = await apiClient.get(`/performance/details`, {
-                params: { course_id: selectedCourse.course_id, class_name: selectedCourse.class_name || '', client_id: clientId }
+            const res = await apiClient.post('/performance/details', {
+                course_id: selectedCourse.course_id, class_name: selectedCourse.class_name || '', client_id: clientId
             });
             setDetailRecords(res.data);
         }
-        const summaryRes = await apiClient.get(`/performance/summary?client_id=${clientId}`);
+        const summaryRes = await apiClient.post('/performance/summary', { client_id: clientId });
         setSummaryRecords(summaryRes.data);
     };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
-import { ChevronLeft, ChevronRight, Bell, Calendar, IndianRupee, Award, BookOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bell, Calendar, IndianRupee, Award, BookOpen, Smartphone } from 'lucide-react';
 
 const SLIDES = [
     {
@@ -186,6 +186,14 @@ export default function DashboardView() {
                         <IndianRupee size={16} />
                         <span>Fee Status</span>
                     </div>
+                    <a 
+                        href="/school_erp.apk" 
+                        download
+                        className="px-4 py-2.5 bg-indigo-600/80 backdrop-blur-md rounded-xl border border-indigo-400/30 text-white flex items-center gap-2 text-sm font-bold shadow-lg hover:bg-indigo-500 transition-colors"
+                    >
+                        <Smartphone size={16} />
+                        <span>Download App</span>
+                    </a>
                 </div>
             </div>
         </div>

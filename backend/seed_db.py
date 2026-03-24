@@ -212,29 +212,51 @@ def create_fees(db: Session, client_id: str, students: list):
 
 def seed_database():
     print("Initializing Database Seeding...")
-    tenants = ["Prahitha Educational", "college_b"]
+    
+    import admin_models
+    from database import engine
+    from sqlalchemy.orm import sessionmaker
+    
+    # Fetch all registered tenants from the public schema
+    Session = sessionmaker(bind=engine)
+    public_db = Session()
+    try:
+        tenants = [c.name for c in public_db.query(admin_models.AdminClient).all()]
+    finally:
+        public_db.close()
+        
+    if not tenants:
+        print("No tenants found in 'public.clients' table. Please run 'init_clients.py' first.")
+        return
+
     for tenant in tenants:
-        print(f"Connecting to database for {tenant}...")
-        with get_tenant_db_ctx(tenant) as db:
-            models.Base.metadata.drop_all(bind=db.get_bind())
-            models.Base.metadata.create_all(bind=db.get_bind())
-            print(f"Database tables recreated for {tenant}.")
+        print(f"\n--- Seeding Tenant: {tenant} ---")
+        try:
+            with get_tenant_db_ctx(tenant) as db:
+                # Filter tables to only those intended for the tenant schema (no explicit schema 'public')
+                tenant_tables = [t for t in models.Base.metadata.sorted_tables if t.schema is None]
+                
+                # Re-verify and create tables in the tenant schema
+                models.Base.metadata.drop_all(bind=db.get_bind(), tables=tenant_tables)
+                models.Base.metadata.create_all(bind=db.get_bind(), tables=tenant_tables)
+                print(f"Database tables recreated for {tenant}.")
+                
+                domain = generate_email_domain(tenant)
+                sysadmin_email, college_admin_email, teachers, students = create_users(db, client_id=tenant, num_teachers=5, num_students=50)
+                courses = create_courses_and_materials(db, client_id=tenant, teachers=teachers, num_courses=15)
+                create_enrollments_attendance_performance(db, client_id=tenant, students=students, courses=courses, max_courses_per_student=4)
+                create_gallery(db, client_id=tenant)
+                create_fees(db, client_id=tenant, students=students)
+                
+                print(f"Tenant '{tenant}' successfully seeded.")
+                print(f"  System Admin : {sysadmin_email} / {ROLE_PASSWORDS['system_admin']}")
+                print(f"  College Admin: {college_admin_email} / {ROLE_PASSWORDS['college_admin']}")
+                print(f"  Teacher      : teacher1.*@{domain} / {ROLE_PASSWORDS['teacher']}")
+                print(f"  Student      : student1.*@{domain} / {ROLE_PASSWORDS['student']}")
+        except Exception as e:
+            print(f"Failed to seed tenant {tenant}: {e}")
             
-            domain = generate_email_domain(tenant)
-            sysadmin_email, college_admin_email, teachers, students = create_users(db, client_id=tenant, num_teachers=5, num_students=50)
-            courses = create_courses_and_materials(db, client_id=tenant, teachers=teachers, num_courses=15)
-            create_enrollments_attendance_performance(db, client_id=tenant, students=students, courses=courses, max_courses_per_student=4)
-            create_gallery(db, client_id=tenant)
-            create_fees(db, client_id=tenant, students=students)
-            
-            print(f"\n--- Tenant: {tenant} seeded! ---")
-            print(f"  System Admin : {sysadmin_email} / {ROLE_PASSWORDS['system_admin']}")
-            print(f"  College Admin: {college_admin_email} / {ROLE_PASSWORDS['college_admin']}")
-            print(f"  Teacher      : teacher1.*@{domain} / {ROLE_PASSWORDS['teacher']}")
-            print(f"  Student      : student1.*@{domain} / {ROLE_PASSWORDS['student']}")
-            print()
-            
-    print("Done. Database successfully populated with synthetic multi-tenant data!")
+    print("\nDone. Database successfully populated with synthetic multi-tenant data!")
 
 if __name__ == "__main__":
     seed_database()

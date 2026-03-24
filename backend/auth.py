@@ -53,3 +53,26 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session 
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
+
+
+def require_current_user(user: Optional[models.User] = Depends(get_current_user)):
+    """Strict auth dependency — raises 401 if no valid token is supplied."""
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
+
+
+def require_role(*allowed_roles: models.RoleEnum):
+    """Factory that returns a dependency enforcing role-based access."""
+    def _check(current_user: models.User = Depends(require_current_user)):
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to perform this action",
+            )
+        return current_user
+    return _check

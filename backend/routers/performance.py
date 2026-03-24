@@ -8,12 +8,31 @@ from io import StringIO
 import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
 from config import settings
+from auth import require_current_user, require_role
 
 router = APIRouter(tags=["Performance"])
 
+# ── Role shortcuts ───────────────────────────────────────
+_staff_only = require_role(models.RoleEnum.teacher, models.RoleEnum.college_admin, models.RoleEnum.system_admin)
+_admin_only = require_role(models.RoleEnum.college_admin, models.RoleEnum.system_admin)
+
+
+# ── Request body models ──────────────────────────────────
+class ClientQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+
+class StudentPerformanceQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+    user_id: int
+
+class PerformanceDetailsQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+    course_id: int
+    class_name: str
+
 
 @router.post("/performance/upload/")
-async def upload_performance_csv(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
+async def upload_performance_csv(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID), current_user: models.User = Depends(_staff_only)):
     with get_tenant_db_ctx(client_id) as db:
         try:
             content = await file.read()
@@ -79,16 +98,18 @@ async def upload_performance_csv(file: UploadFile = File(...), client_id: str = 
             raise HTTPException(status_code=400, detail=f"Error processing CSV file: {str(e)}")
 
 
-@router.get("/students/{user_id}/performance", response_model=List[schemas.Performance])
-def get_student_performance(user_id: int, db: Session = Depends(get_tenant_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+@router.post("/students/performance", response_model=List[schemas.Performance])
+def get_student_performance(body: StudentPerformanceQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
+    if current_user.role not in (models.RoleEnum.college_admin, models.RoleEnum.system_admin) and current_user.id != body.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this student's performance")
+    user = db.query(models.User).filter(models.User.id == body.user_id).first()
     if user and user.role in (models.RoleEnum.college_admin, models.RoleEnum.system_admin):
         return db.query(models.Performance).limit(100).all()
-    return db.query(models.Performance).filter(models.Performance.student_id == user_id).all()
+    return db.query(models.Performance).filter(models.Performance.student_id == body.user_id).all()
 
 
-@router.get("/performance/summary", response_model=List[schemas.CoursePerformanceSummary])
-def get_performance_summary(db: Session = Depends(get_tenant_db)):
+@router.post("/performance/summary", response_model=List[schemas.CoursePerformanceSummary])
+def get_performance_summary(body: ClientQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
     class_totals_subq = db.query(
         models.Profile.class_name,
         func.count(models.Profile.id).label('total_enrolled')
@@ -119,8 +140,8 @@ def get_performance_summary(db: Session = Depends(get_tenant_db)):
     } for r in records]
 
 
-@router.get("/performance/details", response_model=List[schemas.StudentPerformanceDetail])
-def get_performance_details(course_id: int, class_name: str, db: Session = Depends(get_tenant_db)):
+@router.post("/performance/details", response_model=List[schemas.StudentPerformanceDetail])
+def get_performance_details(body: PerformanceDetailsQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
     records = db.query(
         models.Performance.id.label('id'),
         models.User.id.label('user_id'),
@@ -131,8 +152,8 @@ def get_performance_details(course_id: int, class_name: str, db: Session = Depen
     ).join(
         models.Profile, models.User.id == models.Profile.user_id
     ).filter(
-        models.Performance.course_id == course_id,
-        models.Profile.class_name == class_name
+        models.Performance.course_id == body.course_id,
+        models.Profile.class_name == body.class_name
     ).all()
 
     return [{
@@ -148,7 +169,7 @@ class BulkDeleteRequest(BaseModel):
 
 
 @router.post("/performance/bulk-delete/")
-def bulk_delete_performance_records(payload: BulkDeleteRequest):
+def bulk_delete_performance_records(payload: BulkDeleteRequest, current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(payload.client_id) as db:
         deleted = db.query(models.Performance).filter(
             models.Performance.id.in_(payload.ids)
@@ -165,7 +186,7 @@ class PerformanceRecordUpdate(BaseModel):
 
 
 @router.put("/performance/record/{record_id}")
-def update_performance_record(record_id: int, payload: PerformanceRecordUpdate):
+def update_performance_record(record_id: int, payload: PerformanceRecordUpdate, current_user: models.User = Depends(_staff_only)):
     with get_tenant_db_ctx(payload.client_id) as db:
         perf = db.query(models.Performance).filter(models.Performance.id == record_id).first()
         if not perf:
@@ -182,7 +203,7 @@ def update_performance_record(record_id: int, payload: PerformanceRecordUpdate):
 
 
 @router.delete("/performance/record/{record_id}")
-def delete_single_performance_record(record_id: int, client_id: str = ""):
+def delete_single_performance_record(record_id: int, client_id: str = "", current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(client_id) as db:
         perf = db.query(models.Performance).filter(models.Performance.id == record_id).first()
         if not perf:

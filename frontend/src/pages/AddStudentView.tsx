@@ -118,7 +118,7 @@ export default function AddStudentView() {
     const fetchStudents = async () => {
         setStudentsLoading(true);
         try {
-            const res = await apiClient.get('/students/list/');
+            const res = await apiClient.post('/students/list/', { client_id: clientId });
             setStudents(res.data);
         } catch {
             setStudents([]);

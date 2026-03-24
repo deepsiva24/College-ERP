@@ -41,9 +41,7 @@ export default function RecordAttendanceView() {
     useEffect(() => {
         const fetchClasses = async () => {
             try {
-                const res = await apiClient.get(`/classes?client_id=${clientId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await apiClient.post('/classes', { client_id: clientId });
                 setClasses(res.data);
             } catch (err) {
                 console.error("Failed to load classes", err);
@@ -70,9 +68,7 @@ export default function RecordAttendanceView() {
         if (!selectedClass || !selectedSection || !attendanceDate) return;
         setIsFetchingStudents(true);
         try {
-            const res = await apiClient.get(`/students/by-class?class_name=${selectedClass}&section=${selectedSection}&client_id=${clientId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await apiClient.post('/students/by-class', { client_id: clientId, class_name: selectedClass, section: selectedSection });
             setStudents(res.data);
             setCurrentIndex(0);
         } catch (err) {

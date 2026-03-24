@@ -11,9 +11,10 @@ export class AuthService {
         try {
             const response = await apiClient.post<LoginResponse>('/auth/login', { email, password, client_id });
             return response.data;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Login failed", error);
-            throw new Error('Invalid credentials');
+            const detail = error.response?.data?.detail;
+            throw new Error(detail || error.message || 'Login failed');
         }
     }
 }

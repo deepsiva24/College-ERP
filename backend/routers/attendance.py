@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from pydantic import BaseModel
 from typing import List
 import csv, datetime
 from io import StringIO
@@ -7,22 +8,45 @@ from sqlalchemy import func
 import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
 from config import settings
+from auth import require_current_user, require_role
 
 router = APIRouter(tags=["Attendance"])
 
+# ── Role shortcuts ───────────────────────────────────────
+_staff_only = require_role(models.RoleEnum.teacher, models.RoleEnum.college_admin, models.RoleEnum.system_admin)
 
-@router.get("/students/{user_id}/attendance", response_model=List[schemas.Attendance])
-def get_student_attendance(user_id: int, db: Session = Depends(get_tenant_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if user and user.role == models.RoleEnum.admin:
+
+# ── Request body models ──────────────────────────────────
+class ClientQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+
+class StudentAttendanceQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+    user_id: int
+
+class StudentsByClassQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+    class_name: str
+    section: str
+
+
+@router.post("/students/attendance", response_model=List[schemas.Attendance])
+def get_student_attendance(body: StudentAttendanceQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
+    # Check if student is trying to access someone else's record
+    if current_user.role == models.RoleEnum.student and current_user.id != body.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to access another student's attendance")
+
+    # Check for admin role correctly
+    if current_user.role in (models.RoleEnum.college_admin, models.RoleEnum.system_admin):
         return db.query(models.Attendance).order_by(models.Attendance.date.desc()).limit(100).all()
+
     return db.query(models.Attendance).filter(
-        models.Attendance.student_id == user_id
+        models.Attendance.student_id == body.user_id
     ).order_by(models.Attendance.date.desc()).all()
 
 
-@router.get("/attendance/summary", response_model=List[schemas.AttendanceSummaryRecord])
-def get_attendance_summary(db: Session = Depends(get_tenant_db)):
+@router.post("/attendance/summary", response_model=List[schemas.AttendanceSummaryRecord])
+def get_attendance_summary(body: ClientQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(_staff_only)):
     records = db.query(
         models.User.id.label('user_id'),
         models.Profile.admission_id,
@@ -52,8 +76,8 @@ def get_attendance_summary(db: Session = Depends(get_tenant_db)):
     } for r in records]
 
 
-@router.get("/classes", response_model=List[schemas.ClassSectionInfo])
-def get_classes(db: Session = Depends(get_tenant_db)):
+@router.post("/classes", response_model=List[schemas.ClassSectionInfo])
+def get_classes(body: ClientQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(_staff_only)):
     """Get all unique class and section combinations"""
     records = db.query(
         models.Profile.class_name, models.Profile.section
@@ -63,8 +87,8 @@ def get_classes(db: Session = Depends(get_tenant_db)):
     return [{"class_name": r.class_name, "section": r.section or "A"} for r in records]
 
 
-@router.get("/students/by-class", response_model=List[schemas.StudentBasicInfo])
-def get_students_by_class(class_name: str, section: str, db: Session = Depends(get_tenant_db)):
+@router.post("/students/by-class", response_model=List[schemas.StudentBasicInfo])
+def get_students_by_class(body: StudentsByClassQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(_staff_only)):
     """Get all students in a specific class and section"""
     query = db.query(
         models.User.id.label('user_id'),
@@ -73,17 +97,17 @@ def get_students_by_class(class_name: str, section: str, db: Session = Depends(g
         models.Profile.last_name
     ).select_from(models.User).join(models.Profile).filter(
         models.User.role == models.RoleEnum.student,
-        models.Profile.class_name == class_name
+        models.Profile.class_name == body.class_name
     )
-    if section:
-        query = query.filter(models.Profile.section == section)
+    if body.section:
+        query = query.filter(models.Profile.section == body.section)
     records = query.order_by(models.Profile.first_name, models.Profile.last_name).all()
     return [{"user_id": r.user_id, "admission_id": r.admission_id,
              "first_name": r.first_name, "last_name": r.last_name} for r in records]
 
 
 @router.post("/attendance/record")
-def record_attendance(record: schemas.AttendanceRecordCreate):
+def record_attendance(record: schemas.AttendanceRecordCreate, current_user: models.User = Depends(_staff_only)):
     """Record or update attendance for a single student on a specific date"""
     with get_tenant_db_ctx(record.client_id) as db:
         existing = db.query(models.Attendance).filter(
@@ -101,7 +125,7 @@ def record_attendance(record: schemas.AttendanceRecordCreate):
 
 
 @router.post("/attendance/bulk-upload")
-def bulk_upload_attendance(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
+def bulk_upload_attendance(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID), current_user: models.User = Depends(_staff_only)):
     """Bulk import attendance from a CSV file"""
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")

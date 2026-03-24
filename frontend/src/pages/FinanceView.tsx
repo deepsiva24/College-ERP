@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { IndianRupee, ArrowLeft, CheckCircle, AlertCircle, Clock, Upload, FileSpreadsheet, CheckCircle2, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { getTenantFromUrl } from '../utils/tenant';
@@ -104,7 +104,7 @@ export default function FinanceView() {
             });
             setUploadStatus({ type: 'success', message: response.data.message || 'Fee records imported successfully!' });
             setUploadFile(null);
-            apiClient.get(`/finance/summary?client_id=${encodeURIComponent(clientId)}`)
+            apiClient.post('/finance/summary', { client_id: clientId })
                 .then(res => setSummaryData(res.data));
         } catch (error: any) {
             setUploadStatus({ type: 'error', message: error.response?.data?.detail || 'Failed to upload CSV.' });
@@ -115,7 +115,7 @@ export default function FinanceView() {
 
     useEffect(() => {
         setLoading(true);
-        apiClient.get(`/finance/summary?client_id=${encodeURIComponent(clientId)}`)
+        apiClient.post('/finance/summary', { client_id: clientId })
             .then(res => { setSummaryData(res.data); setLoading(false); })
             .catch(() => setLoading(false));
     }, [clientId]);
@@ -124,7 +124,7 @@ export default function FinanceView() {
         setSelectedClass(className);
         setDetailLoading(true);
         try {
-            const res = await apiClient.get(`/finance/class/${encodeURIComponent(className)}?client_id=${encodeURIComponent(clientId)}`);
+            const res = await apiClient.post('/finance/class-details', { client_id: clientId, class_name: className });
             setStudents(res.data);
         } catch (err) {
             console.error("Error fetching class fees", err);
@@ -135,10 +135,10 @@ export default function FinanceView() {
 
     const refreshData = async () => {
         if (selectedClass) {
-            const res = await apiClient.get(`/finance/class/${encodeURIComponent(selectedClass)}?client_id=${encodeURIComponent(clientId)}`);
+            const res = await apiClient.post('/finance/class-details', { client_id: clientId, class_name: selectedClass });
             setStudents(res.data);
         }
-        const summaryRes = await apiClient.get(`/finance/summary?client_id=${encodeURIComponent(clientId)}`);
+        const summaryRes = await apiClient.post('/finance/summary', { client_id: clientId });
         setSummaryData(summaryRes.data);
     };
 

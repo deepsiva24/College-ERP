@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from pydantic import BaseModel
 from typing import List
 import csv
 from io import StringIO
@@ -6,17 +7,32 @@ from sqlalchemy.orm import Session
 import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
 from config import settings
+from auth import require_current_user, require_role
+
 
 router = APIRouter(tags=["Courses"])
 
-
-@router.get("/courses/", response_model=list[schemas.Course])
-def read_courses(skip: int = 0, limit: int = 100, db: Session = Depends(get_tenant_db)):
-    return db.query(models.Course).offset(skip).limit(limit).all()
+# ── Role shortcuts ───────────────────────────────────────
+_admin_only = require_role(models.RoleEnum.college_admin, models.RoleEnum.system_admin)
 
 
-@router.post("/courses/", response_model=schemas.Course)
-def create_course(course: schemas.CourseCreate, teacher_id: int):
+# ── Request body models ──────────────────────────────────
+class ClientQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+
+class CourseMaterialsQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+    course_id: int
+
+
+@router.post("/courses/list", response_model=list[schemas.Course])
+def read_courses(body: ClientQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
+    return db.query(models.Course).all()
+
+
+@router.post("/courses/create", response_model=schemas.Course)
+def create_course(course: schemas.CourseCreate, teacher_id: int, current_user: models.User = Depends(_admin_only)):
+
     with get_tenant_db_ctx(course.client_id) as db:
         db_course = models.Course(**course.dict(exclude={"client_id"}), teacher_id=teacher_id)
         db.add(db_course)
@@ -26,7 +42,7 @@ def create_course(course: schemas.CourseCreate, teacher_id: int):
 
 
 @router.post("/courses/bulk-upload")
-async def bulk_upload_courses(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
+async def bulk_upload_courses(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID), current_user: models.User = Depends(_admin_only)):
     """Bulk import courses from a CSV file"""
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
@@ -63,8 +79,8 @@ async def bulk_upload_courses(file: UploadFile = File(...), client_id: str = For
             raise HTTPException(status_code=400, detail=f"Error processing CSV file: {str(e)}")
 
 
-@router.get("/learning/classes", response_model=List[schemas.ClassCourseGroup])
-def get_courses_grouped_by_class(db: Session = Depends(get_tenant_db)):
+@router.post("/learning/classes", response_model=List[schemas.ClassCourseGroup])
+def get_courses_grouped_by_class(body: ClientQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
     courses = db.query(models.Course).all()
     enrollments = db.query(
         models.Enrollment.course_id,
@@ -119,7 +135,7 @@ def get_courses_grouped_by_class(db: Session = Depends(get_tenant_db)):
 
 
 @router.post("/courses/{course_id}/enroll", response_model=schemas.Enrollment)
-def enroll_in_course(course_id: int, student_id: int, client_id: str = settings.DEFAULT_CLIENT_ID):
+def enroll_in_course(course_id: int, student_id: int, client_id: str = settings.DEFAULT_CLIENT_ID, current_user: models.User = Depends(require_current_user)):
     with get_tenant_db_ctx(client_id) as db:
         course = db.query(models.Course).filter(models.Course.id == course_id).first()
         if not course:
@@ -137,6 +153,6 @@ def enroll_in_course(course_id: int, student_id: int, client_id: str = settings.
         return db_enrollment
 
 
-@router.get("/courses/{course_id}/materials", response_model=List[schemas.LearningMaterial])
-def get_course_materials(course_id: int, db: Session = Depends(get_tenant_db)):
-    return db.query(models.LearningMaterial).filter(models.LearningMaterial.course_id == course_id).all()
+@router.post("/courses/materials", response_model=List[schemas.LearningMaterial])
+def get_course_materials(body: CourseMaterialsQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
+    return db.query(models.LearningMaterial).filter(models.LearningMaterial.course_id == body.course_id).all()

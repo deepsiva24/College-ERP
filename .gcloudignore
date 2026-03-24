@@ -1,0 +1,16 @@
+.gcloudignore
+.git
+.gitignore
+
+# Exclude these massive folders from the backend build context
+frontend/
+mobile_app/
+terraform/
+.agents/
+
+# Ignore python artifacts
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/*.db

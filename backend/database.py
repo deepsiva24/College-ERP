@@ -2,6 +2,7 @@ import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from contextlib import contextmanager
+from fastapi import HTTPException, status
 from config import settings
 
 Base = declarative_base()
@@ -16,24 +17,100 @@ engine = create_engine(DATABASE_URL)
 engines = {}
 
 def get_tenant_db_engine(client_id: str):
-    # Clean client_id for schema name
-    schema_name = f"tenant_{client_id}".replace("-", "_").replace(" ", "_").lower()
+    import admin_models
+    import models
+    from auth import hash_password
     
-    if client_id not in engines:
-        # Create a tenant-specific engine by mapping the default (None) schema to the tenant schema
-        # Note: Client schemas and tables are strictly managed by init_clients.py
-        tenant_engine = engine.execution_options(schema_translate_map={None: schema_name})
-        engines[client_id] = sessionmaker(autocommit=False, autoflush=False, bind=tenant_engine)
+    # Try looking up exactly by Name first, then fallback to subdomain-like matching
+    # if the client_id passed from frontend is the human readable name like "Prahitha Edu"
+    
+    # 1. Connect to the default 'public' schema to verify the client exists
+    # We create a brief session just for checking the admin table
+    SessionLocalTemp = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    temp_db = SessionLocalTemp()
+    
+    try:
+        # Check if client_id matches the name or subdomain
+        client_record = temp_db.query(admin_models.AdminClient).filter(
+            (admin_models.AdminClient.name == client_id) | 
+            (admin_models.AdminClient.subdomain == client_id.lower())
+        ).first()
         
-    return engines[client_id]
+        if not client_record or not client_record.is_active:
+            raise Exception(f"Unauthorized or inactive client: {client_id}")
+            
+        schema_name = client_record.schema_name
+        tenant_name = client_record.name
+        
+        # 2. Check if the schema actually exists in postgres and has our foundational tables
+        is_initialized = False
+        with engine.connect() as conn:
+            # First ensure schema exists
+            conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}"'))
+            conn.commit()
+            
+            # Now check if the 'users' table exists inside it
+            result = conn.execute(text(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = :schema_name AND table_name = 'users'"
+            ), {"schema_name": schema_name}).fetchone()
+            is_initialized = result is not None
+            
+        # 3. Provision the schema if it is not fully initialized
+        if not is_initialized:
+            print(f"Dynamically provisioning tables for {tenant_name} in schema: {schema_name}")
+                
+            tenant_engine = engine.execution_options(schema_translate_map={None: schema_name})
+            
+            # Create all tables in the new schema
+            models.Base.metadata.create_all(bind=tenant_engine)
+            
+            # Create the default admin user
+            InitSession = sessionmaker(autocommit=False, autoflush=False, bind=tenant_engine)
+            init_db = InitSession()
+            try:
+                admin_email = f"admin@{tenant_name.lower().replace(' ', '')}.edu"
+                default_password = f"{tenant_name.lower().replace(' ', '')}@5115" # Default password pattern from yaml
+                
+                admin_user = models.User(
+                    email=admin_email,
+                    hashed_password=hash_password(default_password),
+                    role=models.RoleEnum.college_admin
+                )
+                init_db.add(admin_user)
+                init_db.flush()
+                
+                admin_profile = models.Profile(
+                    first_name="Admin",
+                    last_name="User",
+                    user_id=admin_user.id
+                )
+                init_db.add(admin_profile)
+                init_db.commit()
+                print(f"Provisioned default admin: {admin_email} for schema {schema_name}")
+            except Exception as e:
+                init_db.rollback()
+                print(f"Failed to create default admin for {schema_name}: {e}")
+            finally:
+                init_db.close()
+                
+
+    finally:
+        temp_db.close()
+
+    # 4. Return the cached or newly created engine for this tenant
+    # Use the reliable generated schema_name from the central table as the key
+    if schema_name not in engines:
+        tenant_engine = engine.execution_options(schema_translate_map={None: schema_name})
+        engines[schema_name] = sessionmaker(autocommit=False, autoflush=False, bind=tenant_engine)
+        
+    return engines[schema_name]
 
 def get_tenant_db(client_id: str = settings.DEFAULT_CLIENT_ID):
     """
     Dependency to yield a DB session explicitly tied to a tenant.
     Default is read from DEFAULT_CLIENT_ID environment variable.
     """
-    safe_client_id = "".join(c for c in client_id if c.isalnum() or c in ("_", "-")).lower()
-    SessionLocal = get_tenant_db_engine(safe_client_id)
+    SessionLocal = get_tenant_db_engine(client_id)
     
     db = SessionLocal()
     try:
@@ -43,8 +120,7 @@ def get_tenant_db(client_id: str = settings.DEFAULT_CLIENT_ID):
 
 @contextmanager
 def get_tenant_db_ctx(client_id: str = settings.DEFAULT_CLIENT_ID):
-    safe_client_id = "".join(c for c in client_id if c.isalnum() or c in ("_", "-")).lower()
-    SessionLocal = get_tenant_db_engine(safe_client_id)
+    SessionLocal = get_tenant_db_engine(client_id)
     
     db = SessionLocal()
     try:

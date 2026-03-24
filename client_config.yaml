@@ -1,4 +1,10 @@
 clients:
   - name: "Prahitha Edu"
+    subdomain: "prahitha"
     User login Password for app: "prahitha@5115"
-    
+  - name: "Demo School"
+    subdomain: "demo"
+    User login Password for app: "demo@5115"
+  - name: "Tara Educational"
+    subdomain: "tara"
+    User login Password for app: "tarag@30087"

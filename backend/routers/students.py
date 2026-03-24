@@ -5,19 +5,27 @@ from io import StringIO
 from sqlalchemy.orm import Session
 import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
-from auth import hash_password
+from auth import hash_password, require_current_user, require_role
 from config import settings
 
 router = APIRouter(tags=["Students"])
 
+# ── Role shortcuts ───────────────────────────────────────
+_admin_only = require_role(models.RoleEnum.college_admin, models.RoleEnum.system_admin)
 
-@router.get("/users/", response_model=list[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_tenant_db)):
+
+# ── Request body models ──────────────────────────────────
+class ClientQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+
+
+@router.post("/users/list", response_model=list[schemas.User])
+def read_users(body: ClientQuery, skip: int = 0, limit: int = 100, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
     return db.query(models.User).offset(skip).limit(limit).all()
 
 
-@router.get("/students/list/")
-def list_students(db: Session = Depends(get_tenant_db)):
+@router.post("/students/list/")
+def list_students(body: ClientQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
     students = db.query(
         models.User.id,
         models.User.email,
@@ -40,7 +48,7 @@ def list_students(db: Session = Depends(get_tenant_db)):
 
 
 @router.post("/students/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
-def create_student(student: schemas.StudentCreate):
+def create_student(student: schemas.StudentCreate, current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(student.client_id) as db:
         existing = db.query(models.User).filter(models.User.email == student.email).first()
         if existing:
@@ -69,7 +77,11 @@ def create_student(student: schemas.StudentCreate):
 
 
 @router.post("/students/upload/")
-async def upload_students_csv(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
+async def upload_students_csv(
+    file: UploadFile = File(...),
+    client_id: str = Form(settings.DEFAULT_CLIENT_ID),
+    current_user: models.User = Depends(_admin_only),
+):
     with get_tenant_db_ctx(client_id) as db:
         try:
             content = await file.read()
@@ -128,7 +140,7 @@ class BulkDeleteRequest(BaseModel):
 
 
 @router.post("/students/bulk-delete/")
-def bulk_delete_students(payload: BulkDeleteRequest):
+def bulk_delete_students(payload: BulkDeleteRequest, current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(payload.client_id) as db:
         # Delete cascading related records first
         db.query(models.FeeRecord).filter(models.FeeRecord.student_id.in_(payload.ids)).delete(synchronize_session=False)
@@ -152,7 +164,7 @@ class StudentUpdate(BaseModel):
 
 
 @router.put("/students/{user_id}")
-def update_student(user_id: int, payload: StudentUpdate):
+def update_student(user_id: int, payload: StudentUpdate, current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(payload.client_id) as db:
         user = db.query(models.User).filter(models.User.id == user_id).first()
         if not user:
@@ -177,7 +189,7 @@ def update_student(user_id: int, payload: StudentUpdate):
 
 
 @router.delete("/students/{user_id}")
-def delete_single_student(user_id: int, client_id: str = ""):
+def delete_single_student(user_id: int, client_id: str = "", current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(client_id) as db:
         db.query(models.FeeRecord).filter(models.FeeRecord.student_id == user_id).delete(synchronize_session=False)
         db.query(models.Performance).filter(models.Performance.student_id == user_id).delete(synchronize_session=False)

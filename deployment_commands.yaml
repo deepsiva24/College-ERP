@@ -1,0 +1,21 @@
+deployments:
+  backend:
+    description: "Deploy the FastAPI backend container to Google Cloud Run using Google Cloud Build."
+    directory: "."
+    commands:
+      - "gcloud builds submit --config cloudbuild.yaml ."
+    notes: >
+      This relies on the updated cloudbuild.yaml file, which is configured to build the backend Docker image,
+      push it to Artifact Registry (us-central1-docker.pkg.dev/$PROJECT_ID/erp-repo/backend:latest),
+      and deploy it to Cloud Run (school-erp-backend).
+
+  frontend:
+    description: "Build the Vite static assets and deploy the frontend to Firebase Hosting."
+    directory: "./frontend"
+    commands:
+      - "npm run build"
+      - "npx firebase deploy --only hosting"
+    notes: >
+      This requires the Firebase CLI to be installed and authenticated (`firebase login`).
+      The deployment target is configured in frontend/.firebaserc (rosy-hope-489506-p3)
+      and the exact hosting settings are in frontend/firebase.json.

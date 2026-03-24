@@ -8,12 +8,29 @@ from io import StringIO
 import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
 from config import settings
+from auth import require_current_user, require_role
 
 router = APIRouter(prefix="/finance", tags=["Finance"])
 
+# ── Role shortcuts ───────────────────────────────────────
+_admin_only = require_role(models.RoleEnum.college_admin, models.RoleEnum.system_admin)
+
+
+# ── Request body models ──────────────────────────────────
+class ClientQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+
+class ClassDetailsQuery(BaseModel):
+    client_id: str = settings.DEFAULT_CLIENT_ID
+    class_name: str
+
 
 @router.post("/upload/")
-async def upload_fees_csv(file: UploadFile = File(...), client_id: str = Form(settings.DEFAULT_CLIENT_ID)):
+async def upload_fees_csv(
+    file: UploadFile = File(...),
+    client_id: str = Form(settings.DEFAULT_CLIENT_ID),
+    current_user: models.User = Depends(_admin_only),
+):
     with get_tenant_db_ctx(client_id) as db:
         try:
             content = await file.read()
@@ -78,8 +95,8 @@ async def upload_fees_csv(file: UploadFile = File(...), client_id: str = Form(se
             raise HTTPException(status_code=400, detail=f"Error processing CSV file: {str(e)}")
 
 
-@router.get("/summary", response_model=List[schemas.ClassFeeSummary])
-def get_finance_summary(db: Session = Depends(get_tenant_db)):
+@router.post("/summary", response_model=List[schemas.ClassFeeSummary])
+def get_finance_summary(body: ClientQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
     records = db.query(
         models.Profile.class_name,
         func.sum(models.FeeRecord.amount_due).label("total_due"),
@@ -96,12 +113,12 @@ def get_finance_summary(db: Session = Depends(get_tenant_db)):
     } for r in records]
 
 
-@router.get("/class/{class_name}", response_model=List[schemas.StudentFeeDetail])
-def get_class_fee_details(class_name: str, db: Session = Depends(get_tenant_db)):
-    if class_name == "Unassigned Default":
+@router.post("/class-details", response_model=List[schemas.StudentFeeDetail])
+def get_class_fee_details(body: ClassDetailsQuery, db: Session = Depends(get_tenant_db), current_user: models.User = Depends(require_current_user)):
+    if body.class_name == "Unassigned Default":
         profiles = db.query(models.Profile).filter(models.Profile.class_name == None).all()
     else:
-        profiles = db.query(models.Profile).filter(models.Profile.class_name == class_name).all()
+        profiles = db.query(models.Profile).filter(models.Profile.class_name == body.class_name).all()
 
     user_ids = [p.user_id for p in profiles]
     fee_records = db.query(models.FeeRecord).filter(models.FeeRecord.student_id.in_(user_ids)).all()
@@ -117,7 +134,7 @@ def get_class_fee_details(class_name: str, db: Session = Depends(get_tenant_db))
 
 
 @router.post("/pay/{fee_record_id}")
-def pay_fee(fee_record_id: int, payload: schemas.FeePaymentUpdate):
+def pay_fee(fee_record_id: int, payload: schemas.FeePaymentUpdate, current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(payload.client_id) as db:
         fee = db.query(models.FeeRecord).filter(models.FeeRecord.id == fee_record_id).first()
         if not fee:
@@ -148,7 +165,7 @@ class FeeRecordUpdate(BaseModel):
 
 
 @router.post("/bulk-delete/")
-def bulk_delete_fee_records(payload: BulkDeleteRequest):
+def bulk_delete_fee_records(payload: BulkDeleteRequest, current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(payload.client_id) as db:
         deleted = db.query(models.FeeRecord).filter(
             models.FeeRecord.id.in_(payload.ids)
@@ -158,7 +175,7 @@ def bulk_delete_fee_records(payload: BulkDeleteRequest):
 
 
 @router.put("/record/{record_id}")
-def update_fee_record(record_id: int, payload: FeeRecordUpdate):
+def update_fee_record(record_id: int, payload: FeeRecordUpdate, current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(payload.client_id) as db:
         fee = db.query(models.FeeRecord).filter(models.FeeRecord.id == record_id).first()
         if not fee:
@@ -190,7 +207,7 @@ def update_fee_record(record_id: int, payload: FeeRecordUpdate):
 
 
 @router.delete("/record/{record_id}")
-def delete_single_fee_record(record_id: int, client_id: str = ""):
+def delete_single_fee_record(record_id: int, client_id: str = "", current_user: models.User = Depends(_admin_only)):
     with get_tenant_db_ctx(client_id) as db:
         fee = db.query(models.FeeRecord).filter(models.FeeRecord.id == record_id).first()
         if not fee:
