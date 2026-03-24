@@ -36,10 +36,6 @@ def get_student_attendance(body: StudentAttendanceQuery, db: Session = Depends(g
     if current_user.role == models.RoleEnum.student and current_user.id != body.user_id:
         raise HTTPException(status_code=403, detail="Not authorized to access another student's attendance")
 
-    # Check for admin role correctly
-    if current_user.role in (models.RoleEnum.college_admin, models.RoleEnum.system_admin):
-        return db.query(models.Attendance).order_by(models.Attendance.date.desc()).limit(100).all()
-
     return db.query(models.Attendance).filter(
         models.Attendance.student_id == body.user_id
     ).order_by(models.Attendance.date.desc()).all()
