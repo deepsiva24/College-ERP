@@ -7,6 +7,7 @@ import models, schemas
 from database import get_tenant_db, get_tenant_db_ctx
 from auth import hash_password, require_current_user, require_role
 from config import settings
+from utils.activity_logger import log_activity
 
 router = APIRouter(tags=["Students"])
 
@@ -49,7 +50,7 @@ def list_students(body: ClientQuery, db: Session = Depends(get_tenant_db), curre
 
 @router.post("/students/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 def create_student(student: schemas.StudentCreate, current_user: models.User = Depends(_admin_only)):
-    with get_tenant_db_ctx(student.client_id) as db:
+    with get_tenant_db_ctx(current_user.client_id) as db:
         existing = db.query(models.User).filter(models.User.email == student.email).first()
         if existing:
             raise HTTPException(status_code=400, detail="Email already registered")
@@ -73,6 +74,16 @@ def create_student(student: schemas.StudentCreate, current_user: models.User = D
         )
         db.add(db_profile)
         db.commit()
+
+        log_activity(
+            client_id=student.client_id,
+            user_email=current_user.email,
+            user_role=current_user.role.value if hasattr(current_user.role, 'value') else current_user.role,
+            action="create",
+            table_name="users",
+            record_count=1,
+            details={"student_email": student.email},
+        )
         return db_user
 
 
@@ -82,7 +93,7 @@ async def upload_students_csv(
     client_id: str = Form(settings.DEFAULT_CLIENT_ID),
     current_user: models.User = Depends(_admin_only),
 ):
-    with get_tenant_db_ctx(client_id) as db:
+    with get_tenant_db_ctx(current_user.client_id) as db:
         try:
             content = await file.read()
             csv_reader = csv.DictReader(StringIO(content.decode('utf-8')))
@@ -96,6 +107,38 @@ async def upload_students_csv(
                 if existing:
                     continue
 
+                raw_admission_id = row.get("admission_id")
+                admission_id = raw_admission_id
+                if raw_admission_id:
+                    admission_id_str = str(raw_admission_id).strip()
+                    # Fix scientific notation if present (e.g. from Excel exports)
+                    if 'E+' in admission_id_str.upper() or 'E' in admission_id_str.upper():
+                        try:
+                            admission_id = str(int(float(admission_id_str)))
+                        except ValueError:
+                            admission_id = admission_id_str
+                    else:
+                        admission_id = admission_id_str
+                        
+                    # Skip if admission_id already exists in another profile
+                    existing_profile = db.query(models.Profile).filter(
+                        (models.Profile.admission_id == admission_id) |
+                        (models.Profile.admission_id == admission_id_str)
+                    ).first()
+                    if existing_profile:
+                        continue
+                else:
+                    admission_id = None
+
+                phone_number = row.get("phone_number")
+                if phone_number:
+                    phone_str = str(phone_number).strip()
+                    if 'E+' in phone_str.upper() or 'E' in phone_str.upper():
+                        try:
+                            phone_number = str(int(float(phone_str)))
+                        except ValueError:
+                            phone_number = phone_str
+                            
                 names = row.get("name", "").split(" ", 1)
                 first_name = names[0] if len(names) > 0 else ""
                 last_name = names[1] if len(names) > 1 else ""
@@ -118,9 +161,9 @@ async def upload_students_csv(
 
                 db.add(models.Profile(
                     first_name=first_name, last_name=last_name,
-                    phone=row.get("phone_number"), address=row.get("place"),
+                    phone=phone_number, address=row.get("place"),
                     gender=row.get("gender"), date_of_birth=dob,
-                    admission_id=row.get("admission_id"),
+                    admission_id=admission_id,
                     class_name=row.get("class_name"), branch=row.get("branch"),
                     section=row.get("section"), father_name=row.get("father_name"),
                     photo_url=row.get("photo_url"), user_id=db_user.id
@@ -128,6 +171,16 @@ async def upload_students_csv(
                 added_count += 1
 
             db.commit()
+
+            log_activity(
+                client_id=client_id,
+                user_email=current_user.email,
+                user_role=current_user.role.value if hasattr(current_user.role, 'value') else current_user.role,
+                action="upload",
+                table_name="users",
+                record_count=added_count,
+                details={"source": "csv_upload", "filename": file.filename},
+            )
             return {"message": f"Successfully imported {added_count} students"}
         except Exception as e:
             db.rollback()
@@ -141,7 +194,7 @@ class BulkDeleteRequest(BaseModel):
 
 @router.post("/students/bulk-delete/")
 def bulk_delete_students(payload: BulkDeleteRequest, current_user: models.User = Depends(_admin_only)):
-    with get_tenant_db_ctx(payload.client_id) as db:
+    with get_tenant_db_ctx(current_user.client_id) as db:
         # Delete cascading related records first
         db.query(models.FeeRecord).filter(models.FeeRecord.student_id.in_(payload.ids)).delete(synchronize_session=False)
         db.query(models.Performance).filter(models.Performance.student_id.in_(payload.ids)).delete(synchronize_session=False)
@@ -150,6 +203,16 @@ def bulk_delete_students(payload: BulkDeleteRequest, current_user: models.User =
         db.query(models.Profile).filter(models.Profile.user_id.in_(payload.ids)).delete(synchronize_session=False)
         deleted = db.query(models.User).filter(models.User.id.in_(payload.ids)).delete(synchronize_session=False)
         db.commit()
+
+        log_activity(
+            client_id=payload.client_id,
+            user_email=current_user.email,
+            user_role=current_user.role.value if hasattr(current_user.role, 'value') else current_user.role,
+            action="delete",
+            table_name="users",
+            record_count=deleted,
+            details={"type": "bulk_delete"},
+        )
         return {"message": f"Successfully deleted {deleted} student(s) and all related records"}
 
 
@@ -165,7 +228,7 @@ class StudentUpdate(BaseModel):
 
 @router.put("/students/{user_id}")
 def update_student(user_id: int, payload: StudentUpdate, current_user: models.User = Depends(_admin_only)):
-    with get_tenant_db_ctx(payload.client_id) as db:
+    with get_tenant_db_ctx(current_user.client_id) as db:
         user = db.query(models.User).filter(models.User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=404, detail="Student not found")
@@ -190,7 +253,7 @@ def update_student(user_id: int, payload: StudentUpdate, current_user: models.Us
 
 @router.delete("/students/{user_id}")
 def delete_single_student(user_id: int, client_id: str = "", current_user: models.User = Depends(_admin_only)):
-    with get_tenant_db_ctx(client_id) as db:
+    with get_tenant_db_ctx(current_user.client_id) as db:
         db.query(models.FeeRecord).filter(models.FeeRecord.student_id == user_id).delete(synchronize_session=False)
         db.query(models.Performance).filter(models.Performance.student_id == user_id).delete(synchronize_session=False)
         db.query(models.Attendance).filter(models.Attendance.student_id == user_id).delete(synchronize_session=False)
